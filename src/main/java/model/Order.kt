@@ -1,278 +1,101 @@
-package model;
+package model
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
-import java.math.BigDecimal;
-import java.time.Instant;
+import jakarta.persistence.*
+import org.hibernate.annotations.ColumnDefault
+import org.hibernate.annotations.Nationalized
+import java.math.BigDecimal
+import java.time.Instant
+import java.util.*
 
 @Entity
 @Table(name = "Orders")
-public class Order {
+open class Order {
     @Id
-    @Column(name = "order_id", nullable = false)
-    private Integer id;
+    @ColumnDefault("newid()")
+    @Column(name = "OrderID", nullable = false)
+    open var id: UUID? = null
 
     @Nationalized
-    @Column(name = "order_number", nullable = false, length = 50)
-    private String orderNumber;
+    @Column(name = "OrderNumber", nullable = false, length = 50)
+    open var orderNumber: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "customer_id", nullable = false)
-    private Customer customer;
+    @JoinColumn(name = "UserID", nullable = false)
+    open var userID: User? = null
+
+    @Nationalized
+    @ColumnDefault("'Pending'")
+    @Column(name = "OrderStatus", nullable = false, length = 50)
+    open var orderStatus: String? = null
+
+    @Nationalized
+    @ColumnDefault("'Pending'")
+    @Column(name = "PaymentStatus", nullable = false, length = 50)
+    open var paymentStatus: String? = null
+
+    @Nationalized
+    @Column(name = "PaymentMethod", length = 50)
+    open var paymentMethod: String? = null
+
+    @Nationalized
+    @Column(name = "PaymentTransactionID")
+    open var paymentTransactionID: String? = null
+
+    @Column(name = "SubtotalAmount", nullable = false, precision = 18, scale = 2)
+    open var subtotalAmount: BigDecimal? = null
+
+    @ColumnDefault("0")
+    @Column(name = "TaxAmount", precision = 18, scale = 2)
+    open var taxAmount: BigDecimal? = null
+
+    @ColumnDefault("0")
+    @Column(name = "ShippingAmount", precision = 18, scale = 2)
+    open var shippingAmount: BigDecimal? = null
+
+    @ColumnDefault("0")
+    @Column(name = "DiscountAmount", precision = 18, scale = 2)
+    open var discountAmount: BigDecimal? = null
+
+    @Column(name = "TotalAmount", nullable = false, precision = 18, scale = 2)
+    open var totalAmount: BigDecimal? = null
+
+    @Nationalized
+    @ColumnDefault("'USD'")
+    @Column(name = "CurrencyCode", length = 3)
+    open var currencyCode: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "employee_id")
-    private Employee employee;
+    @JoinColumn(name = "ShippingAddressID")
+    open var shippingAddressID: UserAddress? = null
 
-    @ColumnDefault("getdate()")
-    @Column(name = "order_date")
-    private Instant orderDate;
-
-    @Column(name = "required_date")
-    private Instant requiredDate;
-
-    @Column(name = "shipped_date")
-    private Instant shippedDate;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "BillingAddressID")
+    open var billingAddressID: UserAddress? = null
 
     @Nationalized
-    @ColumnDefault("N'Pending'")
-    @Column(name = "order_status", length = 20)
-    private String orderStatus;
+    @Column(name = "ShippingTrackingNumber", length = 100)
+    open var shippingTrackingNumber: String? = null
 
     @Nationalized
-    @ColumnDefault("N'Unpaid'")
-    @Column(name = "payment_status", length = 20)
-    private String paymentStatus;
-
-    @Nationalized
-    @Column(name = "payment_method", length = 50)
-    private String paymentMethod;
-
-    @ColumnDefault("0")
-    @Column(name = "subtotal", nullable = false, precision = 15, scale = 2)
-    private BigDecimal subtotal;
-
-    @ColumnDefault("0")
-    @Column(name = "tax_amount", precision = 15, scale = 2)
-    private BigDecimal taxAmount;
-
-    @ColumnDefault("0")
-    @Column(name = "shipping_fee", precision = 15, scale = 2)
-    private BigDecimal shippingFee;
-
-    @ColumnDefault("0")
-    @Column(name = "discount_amount", precision = 15, scale = 2)
-    private BigDecimal discountAmount;
-
-    @ColumnDefault("0")
-    @Column(name = "total_amount", nullable = false, precision = 15, scale = 2)
-    private BigDecimal totalAmount;
-
-    @Nationalized
-    @Column(name = "shipping_address", length = 500)
-    private String shippingAddress;
-
-    @Nationalized
-    @Column(name = "shipping_ward", length = 100)
-    private String shippingWard;
-
-    @Nationalized
-    @Column(name = "shipping_district", length = 100)
-    private String shippingDistrict;
-
-    @Nationalized
-    @Column(name = "shipping_city", length = 100)
-    private String shippingCity;
+    @Column(name = "ShippingCarrier", length = 100)
+    open var shippingCarrier: String? = null
 
     @Nationalized
     @Lob
-    @Column(name = "notes")
-    private String notes;
+    @Column(name = "Notes")
+    open var notes: String? = null
 
     @ColumnDefault("getdate()")
-    @Column(name = "created_date")
-    private Instant createdDate;
+    @Column(name = "OrderDate")
+    open var orderDate: Instant? = null
+
+    @Column(name = "ShippedDate")
+    open var shippedDate: Instant? = null
+
+    @Column(name = "DeliveredDate")
+    open var deliveredDate: Instant? = null
 
     @ColumnDefault("getdate()")
-    @Column(name = "updated_date")
-    private Instant updatedDate;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getOrderNumber() {
-        return orderNumber;
-    }
-
-    public void setOrderNumber(String orderNumber) {
-        this.orderNumber = orderNumber;
-    }
-
-    public Customer getCustomer() {
-        return customer;
-    }
-
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-    }
-
-    public Employee getEmployee() {
-        return employee;
-    }
-
-    public void setEmployee(Employee employee) {
-        this.employee = employee;
-    }
-
-    public Instant getOrderDate() {
-        return orderDate;
-    }
-
-    public void setOrderDate(Instant orderDate) {
-        this.orderDate = orderDate;
-    }
-
-    public Instant getRequiredDate() {
-        return requiredDate;
-    }
-
-    public void setRequiredDate(Instant requiredDate) {
-        this.requiredDate = requiredDate;
-    }
-
-    public Instant getShippedDate() {
-        return shippedDate;
-    }
-
-    public void setShippedDate(Instant shippedDate) {
-        this.shippedDate = shippedDate;
-    }
-
-    public String getOrderStatus() {
-        return orderStatus;
-    }
-
-    public void setOrderStatus(String orderStatus) {
-        this.orderStatus = orderStatus;
-    }
-
-    public String getPaymentStatus() {
-        return paymentStatus;
-    }
-
-    public void setPaymentStatus(String paymentStatus) {
-        this.paymentStatus = paymentStatus;
-    }
-
-    public String getPaymentMethod() {
-        return paymentMethod;
-    }
-
-    public void setPaymentMethod(String paymentMethod) {
-        this.paymentMethod = paymentMethod;
-    }
-
-    public BigDecimal getSubtotal() {
-        return subtotal;
-    }
-
-    public void setSubtotal(BigDecimal subtotal) {
-        this.subtotal = subtotal;
-    }
-
-    public BigDecimal getTaxAmount() {
-        return taxAmount;
-    }
-
-    public void setTaxAmount(BigDecimal taxAmount) {
-        this.taxAmount = taxAmount;
-    }
-
-    public BigDecimal getShippingFee() {
-        return shippingFee;
-    }
-
-    public void setShippingFee(BigDecimal shippingFee) {
-        this.shippingFee = shippingFee;
-    }
-
-    public BigDecimal getDiscountAmount() {
-        return discountAmount;
-    }
-
-    public void setDiscountAmount(BigDecimal discountAmount) {
-        this.discountAmount = discountAmount;
-    }
-
-    public BigDecimal getTotalAmount() {
-        return totalAmount;
-    }
-
-    public void setTotalAmount(BigDecimal totalAmount) {
-        this.totalAmount = totalAmount;
-    }
-
-    public String getShippingAddress() {
-        return shippingAddress;
-    }
-
-    public void setShippingAddress(String shippingAddress) {
-        this.shippingAddress = shippingAddress;
-    }
-
-    public String getShippingWard() {
-        return shippingWard;
-    }
-
-    public void setShippingWard(String shippingWard) {
-        this.shippingWard = shippingWard;
-    }
-
-    public String getShippingDistrict() {
-        return shippingDistrict;
-    }
-
-    public void setShippingDistrict(String shippingDistrict) {
-        this.shippingDistrict = shippingDistrict;
-    }
-
-    public String getShippingCity() {
-        return shippingCity;
-    }
-
-    public void setShippingCity(String shippingCity) {
-        this.shippingCity = shippingCity;
-    }
-
-    public String getNotes() {
-        return notes;
-    }
-
-    public void setNotes(String notes) {
-        this.notes = notes;
-    }
-
-    public Instant getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Instant createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public Instant getUpdatedDate() {
-        return updatedDate;
-    }
-
-    public void setUpdatedDate(Instant updatedDate) {
-        this.updatedDate = updatedDate;
-    }
-
+    @Column(name = "ModifiedDate")
+    open var modifiedDate: Instant? = null
 }

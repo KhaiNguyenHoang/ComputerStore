@@ -1,108 +1,38 @@
-package model;
+package model
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
-import java.time.Instant;
+import jakarta.persistence.*
+import org.hibernate.annotations.ColumnDefault
+import org.hibernate.annotations.Nationalized
+import java.time.Instant
 
 @Entity
 @Table(name = "Categories")
-public class Category {
+open class Category {
     @Id
-    @Column(name = "category_id", nullable = false)
-    private Integer id;
+    @Column(name = "CategoryID", nullable = false)
+    open var id: Int? = null
 
     @Nationalized
-    @Column(name = "category_name", nullable = false, length = 100)
-    private String categoryName;
+    @Column(name = "CategoryName", nullable = false, length = 100)
+    open var categoryName: String? = null
 
     @Nationalized
-    @Column(name = "description", length = 500)
-    private String description;
+    @Column(name = "Description", length = 500)
+    open var description: String? = null
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_category_id")
-    private Category parentCategory;
-
-    @Nationalized
-    @Column(name = "image_url")
-    private String imageUrl;
+    @JoinColumn(name = "ParentCategoryID")
+    open var parentCategoryID: Category? = null
 
     @ColumnDefault("1")
-    @Column(name = "is_active")
-    private Boolean isActive;
+    @Column(name = "IsActive")
+    open var isActive: Boolean? = null
 
     @ColumnDefault("getdate()")
-    @Column(name = "created_date")
-    private Instant createdDate;
+    @Column(name = "CreatedDate")
+    open var createdDate: Instant? = null
 
     @ColumnDefault("getdate()")
-    @Column(name = "updated_date")
-    private Instant updatedDate;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getCategoryName() {
-        return categoryName;
-    }
-
-    public void setCategoryName(String categoryName) {
-        this.categoryName = categoryName;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public Category getParentCategory() {
-        return parentCategory;
-    }
-
-    public void setParentCategory(Category parentCategory) {
-        this.parentCategory = parentCategory;
-    }
-
-    public String getImageUrl() {
-        return imageUrl;
-    }
-
-    public void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public Instant getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Instant createdDate) {
-        this.createdDate = createdDate;
-    }
-
-    public Instant getUpdatedDate() {
-        return updatedDate;
-    }
-
-    public void setUpdatedDate(Instant updatedDate) {
-        this.updatedDate = updatedDate;
-    }
-
+    @Column(name = "ModifiedDate")
+    open var modifiedDate: Instant? = null
 }

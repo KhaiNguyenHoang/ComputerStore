@@ -1,111 +1,41 @@
-package model;
+package model
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
-import java.time.Instant;
+import jakarta.persistence.Column
+import jakarta.persistence.Entity
+import jakarta.persistence.Id
+import jakarta.persistence.Table
+import org.hibernate.annotations.ColumnDefault
+import org.hibernate.annotations.Nationalized
+import java.time.Instant
 
 @Entity
 @Table(name = "Brands")
-public class Brand {
+open class Brand {
     @Id
-    @Column(name = "brand_id", nullable = false)
-    private Integer id;
+    @Column(name = "BrandID", nullable = false)
+    open var id: Int? = null
 
     @Nationalized
-    @Column(name = "brand_name", nullable = false, length = 100)
-    private String brandName;
+    @Column(name = "BrandName", nullable = false, length = 100)
+    open var brandName: String? = null
 
     @Nationalized
-    @Column(name = "description", length = 500)
-    private String description;
+    @Column(name = "Description", length = 500)
+    open var description: String? = null
 
     @Nationalized
-    @Column(name = "logo_url")
-    private String logoUrl;
+    @Column(name = "LogoURL")
+    open var logoURL: String? = null
 
     @Nationalized
-    @Column(name = "website")
-    private String website;
-
-    @Nationalized
-    @Column(name = "country", length = 50)
-    private String country;
+    @Column(name = "Website")
+    open var website: String? = null
 
     @ColumnDefault("1")
-    @Column(name = "is_active")
-    private Boolean isActive;
+    @Column(name = "IsActive")
+    open var isActive: Boolean? = null
 
     @ColumnDefault("getdate()")
-    @Column(name = "created_date")
-    private Instant createdDate;
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public String getBrandName() {
-        return brandName;
-    }
-
-    public void setBrandName(String brandName) {
-        this.brandName = brandName;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public String getLogoUrl() {
-        return logoUrl;
-    }
-
-    public void setLogoUrl(String logoUrl) {
-        this.logoUrl = logoUrl;
-    }
-
-    public String getWebsite() {
-        return website;
-    }
-
-    public void setWebsite(String website) {
-        this.website = website;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public Boolean getIsActive() {
-        return isActive;
-    }
-
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
-    }
-
-    public Instant getCreatedDate() {
-        return createdDate;
-    }
-
-    public void setCreatedDate(Instant createdDate) {
-        this.createdDate = createdDate;
-    }
-
+    @Column(name = "CreatedDate")
+    open var createdDate: Instant? = null
 }

@@ -41,9 +41,4 @@ public class DBContext {
     public Connection getConnection() {
         return connection;
     }
-
-    public static void main(String[] args) {
-        DBContext dbContext = new DBContext();
-        System.out.println(dbContext.getConnection());
-    }
 }

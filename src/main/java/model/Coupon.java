@@ -1,75 +1,56 @@
 package model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
-@Entity
-@Table(name = "Coupons")
 public class Coupon {
-    @Id
-    @Column(name = "CouponID", nullable = false)
-    private Integer id;
-
-    @Nationalized
-    @Column(name = "CouponCode", nullable = false, length = 50)
+    private UUID couponID;
     private String couponCode;
-
-    @Nationalized
-    @Column(name = "CouponName", nullable = false)
     private String couponName;
-
-    @Nationalized
-    @Column(name = "Description", length = 500)
     private String description;
-
-    @Nationalized
-    @Column(name = "DiscountType", nullable = false, length = 20)
     private String discountType;
-
-    @Column(name = "DiscountValue", nullable = false, precision = 18, scale = 2)
     private BigDecimal discountValue;
-
-    @ColumnDefault("0")
-    @Column(name = "MinOrderAmount", precision = 18, scale = 2)
     private BigDecimal minOrderAmount;
-
-    @Column(name = "MaxDiscountAmount", precision = 18, scale = 2)
     private BigDecimal maxDiscountAmount;
-
-    @Column(name = "UsageLimit")
     private Integer usageLimit;
+    private int usedCount;
+    private boolean isActive;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+    private LocalDateTime createdDate;
+    private List<UserCouponUsage> couponUsages;
 
-    @ColumnDefault("0")
-    @Column(name = "UsedCount")
-    private Integer usedCount;
-
-    @ColumnDefault("1")
-    @Column(name = "IsActive")
-    private Boolean isActive;
-
-    @Column(name = "StartDate", nullable = false)
-    private Instant startDate;
-
-    @Column(name = "EndDate", nullable = false)
-    private Instant endDate;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    public Integer getId() {
-        return id;
+    public Coupon() {
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public Coupon(UUID couponID, String couponCode, String couponName, String description, String discountType,
+                  BigDecimal discountValue, BigDecimal minOrderAmount, BigDecimal maxDiscountAmount, Integer usageLimit,
+                  int usedCount, boolean isActive, LocalDateTime startDate, LocalDateTime endDate,
+                  LocalDateTime createdDate) {
+        this.couponID = couponID;
+        this.couponCode = couponCode;
+        this.couponName = couponName;
+        this.description = description;
+        this.discountType = discountType;
+        this.discountValue = discountValue;
+        this.minOrderAmount = minOrderAmount;
+        this.maxDiscountAmount = maxDiscountAmount;
+        this.usageLimit = usageLimit;
+        this.usedCount = usedCount;
+        this.isActive = isActive;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.createdDate = createdDate;
+    }
+
+    public UUID getCouponID() {
+        return couponID;
+    }
+
+    public void setCouponID(UUID couponID) {
+        this.couponID = couponID;
     }
 
     public String getCouponCode() {
@@ -136,44 +117,51 @@ public class Coupon {
         this.usageLimit = usageLimit;
     }
 
-    public Integer getUsedCount() {
+    public int getUsedCount() {
         return usedCount;
     }
 
-    public void setUsedCount(Integer usedCount) {
+    public void setUsedCount(int usedCount) {
         this.usedCount = usedCount;
     }
 
-    public Boolean getIsActive() {
+    public boolean isActive() {
         return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
-    public Instant getStartDate() {
+    public LocalDateTime getStartDate() {
         return startDate;
     }
 
-    public void setStartDate(Instant startDate) {
+    public void setStartDate(LocalDateTime startDate) {
         this.startDate = startDate;
     }
 
-    public Instant getEndDate() {
+    public LocalDateTime getEndDate() {
         return endDate;
     }
 
-    public void setEndDate(Instant endDate) {
+    public void setEndDate(LocalDateTime endDate) {
         this.endDate = endDate;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
+    public List<UserCouponUsage> getCouponUsages() {
+        return couponUsages;
+    }
+
+    public void setCouponUsages(List<UserCouponUsage> couponUsages) {
+        this.couponUsages = couponUsages;
+    }
 }

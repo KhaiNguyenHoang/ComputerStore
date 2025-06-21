@@ -1,59 +1,49 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
+import model.User;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "EmailVerificationTokens")
 public class EmailVerificationToken {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "TokenID", nullable = false)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserID", nullable = false)
-    private User userID;
-
-    @ColumnDefault("newid()")
-    @Column(name = "Token")
+    private UUID tokenID;
+    private UUID userID;
     private UUID token;
-
-    @Nationalized
-    @Column(name = "TokenType", nullable = false, length = 50)
     private String tokenType;
+    private LocalDateTime expiryDate;
+    private boolean isUsed;
+    private LocalDateTime createdDate;
+    private LocalDateTime usedDate;
+    private User user;
 
-    @Column(name = "ExpiryDate", nullable = false)
-    private Instant expiryDate;
-
-    @ColumnDefault("0")
-    @Column(name = "IsUsed")
-    private Boolean isUsed;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    @Column(name = "UsedDate")
-    private Instant usedDate;
-
-    public UUID getId() {
-        return id;
+    public EmailVerificationToken() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public EmailVerificationToken(UUID tokenID, UUID userID, UUID token, String tokenType, LocalDateTime expiryDate,
+                                  boolean isUsed, LocalDateTime createdDate, LocalDateTime usedDate) {
+        this.tokenID = tokenID;
+        this.userID = userID;
+        this.token = token;
+        this.tokenType = tokenType;
+        this.expiryDate = expiryDate;
+        this.isUsed = isUsed;
+        this.createdDate = createdDate;
+        this.usedDate = usedDate;
     }
 
-    public User getUserID() {
+    public UUID getTokenID() {
+        return tokenID;
+    }
+
+    public void setTokenID(UUID tokenID) {
+        this.tokenID = tokenID;
+    }
+
+    public UUID getUserID() {
         return userID;
     }
 
-    public void setUserID(User userID) {
+    public void setUserID(UUID userID) {
         this.userID = userID;
     }
 
@@ -73,36 +63,43 @@ public class EmailVerificationToken {
         this.tokenType = tokenType;
     }
 
-    public Instant getExpiryDate() {
+    public LocalDateTime getExpiryDate() {
         return expiryDate;
     }
 
-    public void setExpiryDate(Instant expiryDate) {
+    public void setExpiryDate(LocalDateTime expiryDate) {
         this.expiryDate = expiryDate;
     }
 
-    public Boolean getIsUsed() {
+    public boolean isUsed() {
         return isUsed;
     }
 
-    public void setIsUsed(Boolean isUsed) {
-        this.isUsed = isUsed;
+    public void setUsed(boolean used) {
+        isUsed = used;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
-    public Instant getUsedDate() {
+    public LocalDateTime getUsedDate() {
         return usedDate;
     }
 
-    public void setUsedDate(Instant usedDate) {
+    public void setUsedDate(LocalDateTime usedDate) {
         this.usedDate = usedDate;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

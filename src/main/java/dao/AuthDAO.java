@@ -103,16 +103,16 @@ public class AuthDAO extends DBContext {
                     throw new SQLException("Email not verified");
                 }
 
-                User user = new User();
-                user.setId(UUID.fromString(resultSet.getString("UserID")));
+                var user = new User();
+                user.setUserID(UUID.fromString(resultSet.getString("UserID")));
                 user.setUsername(resultSet.getString("Username"));
                 user.setEmail(resultSet.getString("Email"));
                 user.setPasswordHash(storedPasswordHash);
                 user.setSalt(resultSet.getString("Salt"));
                 user.setFirstName(resultSet.getString("FirstName"));
                 user.setLastName(resultSet.getString("LastName"));
-                user.setIsEmailVerified(resultSet.getBoolean("IsEmailVerified"));
-                user.setIsActive(resultSet.getBoolean("IsActive"));
+                user.setEmailVerified(resultSet.getBoolean("IsEmailVerified"));
+                user.setActive(resultSet.getBoolean("IsActive"));
                 user.setRole(resultSet.getString("Role"));
                 user.setCreatedDate(resultSet.getTimestamp("CreatedDate").toLocalDateTime());
                 user.setModifiedDate(resultSet.getTimestamp("ModifiedDate").toLocalDateTime());
@@ -123,7 +123,7 @@ public class AuthDAO extends DBContext {
 
                 String updateSql = "UPDATE Users SET LastLoginDate = CURRENT_TIMESTAMP WHERE UserID = ?";
                 try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
-                    updateStmt.setString(1, user.getId().toString());
+                    updateStmt.setString(1, user.getUserID().toString());
                     updateStmt.executeUpdate();
                 }
 

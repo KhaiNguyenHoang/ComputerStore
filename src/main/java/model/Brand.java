@@ -1,51 +1,41 @@
 package model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
+import model.Product;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
-@Entity
-@Table(name = "Brands")
 public class Brand {
-    @Id
-    @Column(name = "BrandID", nullable = false)
-    private Integer id;
-
-    @Nationalized
-    @Column(name = "BrandName", nullable = false, length = 100)
+    private UUID brandID;
     private String brandName;
-
-    @Nationalized
-    @Column(name = "Description", length = 500)
     private String description;
-
-    @Nationalized
-    @Column(name = "LogoURL")
     private String logoURL;
-
-    @Nationalized
-    @Column(name = "Website")
     private String website;
+    private boolean isActive;
+    private LocalDateTime createdDate;
+    private List<Product> products;
 
-    @ColumnDefault("1")
-    @Column(name = "IsActive")
-    private Boolean isActive;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    public Integer getId() {
-        return id;
+    public Brand() {
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public Brand(UUID brandID, String brandName, String description, String logoURL, String website, boolean isActive,
+                 LocalDateTime createdDate) {
+        this.brandID = brandID;
+        this.brandName = brandName;
+        this.description = description;
+        this.logoURL = logoURL;
+        this.website = website;
+        this.isActive = isActive;
+        this.createdDate = createdDate;
+    }
+
+    public UUID getBrandID() {
+        return brandID;
+    }
+
+    public void setBrandID(UUID brandID) {
+        this.brandID = brandID;
     }
 
     public String getBrandName() {
@@ -80,20 +70,27 @@ public class Brand {
         this.website = website;
     }
 
-    public Boolean getIsActive() {
+    public boolean isActive() {
         return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
 }

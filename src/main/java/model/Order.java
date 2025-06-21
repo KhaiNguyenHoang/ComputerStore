@@ -1,111 +1,78 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "Orders")
 public class Order {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "OrderID", nullable = false)
-    private UUID id;
-
-    @Nationalized
-    @Column(name = "OrderNumber", nullable = false, length = 50)
+    private UUID orderID;
     private String orderNumber;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserID", nullable = false)
-    private User userID;
-
-    @Nationalized
-    @ColumnDefault("'Pending'")
-    @Column(name = "OrderStatus", nullable = false, length = 50)
+    private UUID userID;
     private String orderStatus;
-
-    @Nationalized
-    @ColumnDefault("'Pending'")
-    @Column(name = "PaymentStatus", nullable = false, length = 50)
     private String paymentStatus;
-
-    @Nationalized
-    @Column(name = "PaymentMethod", length = 50)
     private String paymentMethod;
-
-    @Nationalized
-    @Column(name = "PaymentTransactionID")
     private String paymentTransactionID;
-
-    @Column(name = "SubtotalAmount", nullable = false, precision = 18, scale = 2)
     private BigDecimal subtotalAmount;
-
-    @ColumnDefault("0")
-    @Column(name = "TaxAmount", precision = 18, scale = 2)
     private BigDecimal taxAmount;
-
-    @ColumnDefault("0")
-    @Column(name = "ShippingAmount", precision = 18, scale = 2)
     private BigDecimal shippingAmount;
-
-    @ColumnDefault("0")
-    @Column(name = "DiscountAmount", precision = 18, scale = 2)
     private BigDecimal discountAmount;
-
-    @Column(name = "TotalAmount", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalAmount;
-
-    @Nationalized
-    @ColumnDefault("'USD'")
-    @Column(name = "CurrencyCode", length = 3)
     private String currencyCode;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ShippingAddressID")
-    private UserAddress shippingAddressID;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "BillingAddressID")
-    private UserAddress billingAddressID;
-
-    @Nationalized
-    @Column(name = "ShippingTrackingNumber", length = 100)
+    private UUID shippingAddressID;
+    private UUID billingAddressID;
     private String shippingTrackingNumber;
-
-    @Nationalized
-    @Column(name = "ShippingCarrier", length = 100)
     private String shippingCarrier;
-
-    @Nationalized
-    @Lob
-    @Column(name = "Notes")
     private String notes;
+    private LocalDateTime orderDate;
+    private LocalDateTime shippedDate;
+    private LocalDateTime deliveredDate;
+    private LocalDateTime modifiedDate;
+    private User user;
+    private UserAddress shippingAddress;
+    private UserAddress billingAddress;
+    private List<OrderItem> orderItems;
+    private List<UserCouponUsage> couponUsages;
 
-    @ColumnDefault("getdate()")
-    @Column(name = "OrderDate")
-    private Instant orderDate;
-
-    @Column(name = "ShippedDate")
-    private Instant shippedDate;
-
-    @Column(name = "DeliveredDate")
-    private Instant deliveredDate;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "ModifiedDate")
-    private Instant modifiedDate;
-
-    public UUID getId() {
-        return id;
+    public Order() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public Order(UUID orderID, String orderNumber, UUID userID, String orderStatus, String paymentStatus,
+                 String paymentMethod, String paymentTransactionID, BigDecimal subtotalAmount, BigDecimal taxAmount,
+                 BigDecimal shippingAmount, BigDecimal discountAmount, BigDecimal totalAmount, String currencyCode,
+                 UUID shippingAddressID, UUID billingAddressID, String shippingTrackingNumber, String shippingCarrier,
+                 String notes, LocalDateTime orderDate, LocalDateTime shippedDate, LocalDateTime deliveredDate,
+                 LocalDateTime modifiedDate) {
+        this.orderID = orderID;
+        this.orderNumber = orderNumber;
+        this.userID = userID;
+        this.orderStatus = orderStatus;
+        this.paymentStatus = paymentStatus;
+        this.paymentMethod = paymentMethod;
+        this.paymentTransactionID = paymentTransactionID;
+        this.subtotalAmount = subtotalAmount;
+        this.taxAmount = taxAmount;
+        this.shippingAmount = shippingAmount;
+        this.discountAmount = discountAmount;
+        this.totalAmount = totalAmount;
+        this.currencyCode = currencyCode;
+        this.shippingAddressID = shippingAddressID;
+        this.billingAddressID = billingAddressID;
+        this.shippingTrackingNumber = shippingTrackingNumber;
+        this.shippingCarrier = shippingCarrier;
+        this.notes = notes;
+        this.orderDate = orderDate;
+        this.shippedDate = shippedDate;
+        this.deliveredDate = deliveredDate;
+        this.modifiedDate = modifiedDate;
+    }
+
+    public UUID getOrderID() {
+        return orderID;
+    }
+
+    public void setOrderID(UUID orderID) {
+        this.orderID = orderID;
     }
 
     public String getOrderNumber() {
@@ -116,11 +83,11 @@ public class Order {
         this.orderNumber = orderNumber;
     }
 
-    public User getUserID() {
+    public UUID getUserID() {
         return userID;
     }
 
-    public void setUserID(User userID) {
+    public void setUserID(UUID userID) {
         this.userID = userID;
     }
 
@@ -204,19 +171,19 @@ public class Order {
         this.currencyCode = currencyCode;
     }
 
-    public UserAddress getShippingAddressID() {
+    public UUID getShippingAddressID() {
         return shippingAddressID;
     }
 
-    public void setShippingAddressID(UserAddress shippingAddressID) {
+    public void setShippingAddressID(UUID shippingAddressID) {
         this.shippingAddressID = shippingAddressID;
     }
 
-    public UserAddress getBillingAddressID() {
+    public UUID getBillingAddressID() {
         return billingAddressID;
     }
 
-    public void setBillingAddressID(UserAddress billingAddressID) {
+    public void setBillingAddressID(UUID billingAddressID) {
         this.billingAddressID = billingAddressID;
     }
 
@@ -244,36 +211,75 @@ public class Order {
         this.notes = notes;
     }
 
-    public Instant getOrderDate() {
+    public LocalDateTime getOrderDate() {
         return orderDate;
     }
 
-    public void setOrderDate(Instant orderDate) {
+    public void setOrderDate(LocalDateTime orderDate) {
         this.orderDate = orderDate;
     }
 
-    public Instant getShippedDate() {
+    public LocalDateTime getShippedDate() {
         return shippedDate;
     }
 
-    public void setShippedDate(Instant shippedDate) {
+    public void setShippedDate(LocalDateTime shippedDate) {
         this.shippedDate = shippedDate;
     }
 
-    public Instant getDeliveredDate() {
+    public LocalDateTime getDeliveredDate() {
         return deliveredDate;
     }
 
-    public void setDeliveredDate(Instant deliveredDate) {
+    public void setDeliveredDate(LocalDateTime deliveredDate) {
         this.deliveredDate = deliveredDate;
     }
 
-    public Instant getModifiedDate() {
+    public LocalDateTime getModifiedDate() {
         return modifiedDate;
     }
 
-    public void setModifiedDate(Instant modifiedDate) {
+    public void setModifiedDate(LocalDateTime modifiedDate) {
         this.modifiedDate = modifiedDate;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public UserAddress getShippingAddress() {
+        return shippingAddress;
+    }
+
+    public void setShippingAddress(UserAddress shippingAddress) {
+        this.shippingAddress = shippingAddress;
+    }
+
+    public UserAddress getBillingAddress() {
+        return billingAddress;
+    }
+
+    public void setBillingAddress(UserAddress billingAddress) {
+        this.billingAddress = billingAddress;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
+    public List<UserCouponUsage> getCouponUsages() {
+        return couponUsages;
+    }
+
+    public void setCouponUsages(List<UserCouponUsage> couponUsages) {
+        this.couponUsages = couponUsages;
+    }
 }

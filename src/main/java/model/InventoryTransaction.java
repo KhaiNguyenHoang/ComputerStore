@@ -1,63 +1,51 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "InventoryTransactions")
 public class InventoryTransaction {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "TransactionID", nullable = false)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductID", nullable = false)
-    private Product productID;
-
-    @Nationalized
-    @Column(name = "TransactionType", nullable = false, length = 50)
+    private UUID transactionID;
+    private UUID productID;
     private String transactionType;
-
-    @Column(name = "Quantity", nullable = false)
-    private Integer quantity;
-
-    @Nationalized
-    @Column(name = "ReferenceType", length = 50)
+    private int quantity;
     private String referenceType;
-
-    @Column(name = "ReferenceID")
     private UUID referenceID;
-
-    @Nationalized
-    @Column(name = "Notes", length = 500)
     private String notes;
+    private LocalDateTime createdDate;
+    private UUID createdBy;
+    private Product product;
+    private User createdByUser;
 
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "CreatedBy")
-    private User createdBy;
-
-    public UUID getId() {
-        return id;
+    public InventoryTransaction() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public InventoryTransaction(UUID transactionID, UUID productID, String transactionType, int quantity,
+                                String referenceType, UUID referenceID, String notes, LocalDateTime createdDate,
+                                UUID createdBy) {
+        this.transactionID = transactionID;
+        this.productID = productID;
+        this.transactionType = transactionType;
+        this.quantity = quantity;
+        this.referenceType = referenceType;
+        this.referenceID = referenceID;
+        this.notes = notes;
+        this.createdDate = createdDate;
+        this.createdBy = createdBy;
     }
 
-    public Product getProductID() {
+    public UUID getTransactionID() {
+        return transactionID;
+    }
+
+    public void setTransactionID(UUID transactionID) {
+        this.transactionID = transactionID;
+    }
+
+    public UUID getProductID() {
         return productID;
     }
 
-    public void setProductID(Product productID) {
+    public void setProductID(UUID productID) {
         this.productID = productID;
     }
 
@@ -69,11 +57,11 @@ public class InventoryTransaction {
         this.transactionType = transactionType;
     }
 
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
@@ -101,20 +89,35 @@ public class InventoryTransaction {
         this.notes = notes;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
-    public User getCreatedBy() {
+    public UUID getCreatedBy() {
         return createdBy;
     }
 
-    public void setCreatedBy(User createdBy) {
+    public void setCreatedBy(UUID createdBy) {
         this.createdBy = createdBy;
     }
 
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public User getCreatedByUser() {
+        return createdByUser;
+    }
+
+    public void setCreatedByUser(User createdByUser) {
+        this.createdByUser = createdByUser;
+    }
 }

@@ -1,73 +1,57 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "UserAddresses")
 public class UserAddress {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "AddressID", nullable = false)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserID", nullable = false)
-    private User userID;
-
-    @Nationalized
-    @Column(name = "AddressType", nullable = false, length = 20)
+    private UUID addressID;
+    private UUID userID;
     private String addressType;
-
-    @Nationalized
-    @Column(name = "AddressLine1", nullable = false)
     private String addressLine1;
-
-    @Nationalized
-    @Column(name = "AddressLine2")
     private String addressLine2;
-
-    @Nationalized
-    @Column(name = "City", nullable = false, length = 100)
     private String city;
-
-    @Nationalized
-    @Column(name = "State", nullable = false, length = 100)
     private String state;
-
-    @Nationalized
-    @Column(name = "PostalCode", nullable = false, length = 20)
     private String postalCode;
-
-    @Nationalized
-    @Column(name = "Country", nullable = false, length = 100)
     private String country;
+    private boolean isDefault;
+    private LocalDateTime createdDate;
+    private User user;
+    private List<Order> shippingOrders;
+    private List<Order> billingOrders;
 
-    @ColumnDefault("0")
-    @Column(name = "IsDefault")
-    private Boolean isDefault;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    public UUID getId() {
-        return id;
+    public UserAddress() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public UserAddress(UUID addressID, UUID userID, String addressType, String addressLine1, String addressLine2,
+                       String city, String state, String postalCode, String country, boolean isDefault,
+                       LocalDateTime createdDate) {
+        this.addressID = addressID;
+        this.userID = userID;
+        this.addressType = addressType;
+        this.addressLine1 = addressLine1;
+        this.addressLine2 = addressLine2;
+        this.city = city;
+        this.state = state;
+        this.postalCode = postalCode;
+        this.country = country;
+        this.isDefault = isDefault;
+        this.createdDate = createdDate;
     }
 
-    public User getUserID() {
+    public UUID getAddressID() {
+        return addressID;
+    }
+
+    public void setAddressID(UUID addressID) {
+        this.addressID = addressID;
+    }
+
+    public UUID getUserID() {
         return userID;
     }
 
-    public void setUserID(User userID) {
+    public void setUserID(UUID userID) {
         this.userID = userID;
     }
 
@@ -127,20 +111,43 @@ public class UserAddress {
         this.country = country;
     }
 
-    public Boolean getIsDefault() {
+    public boolean isDefault() {
         return isDefault;
     }
 
-    public void setIsDefault(Boolean isDefault) {
+    public void setDefault(boolean isDefault) {
         this.isDefault = isDefault;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public List<Order> getShippingOrders() {
+        return shippingOrders;
+    }
+
+    public void setShippingOrders(List<Order> shippingOrders) {
+        this.shippingOrders = shippingOrders;
+    }
+
+    public List<Order> getBillingOrders() {
+        return billingOrders;
+    }
+
+    public void setBillingOrders(List<Order> billingOrders) {
+        this.billingOrders = billingOrders;
+    }
 }

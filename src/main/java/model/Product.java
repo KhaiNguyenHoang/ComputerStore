@@ -1,112 +1,83 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
-@Entity
-@Table(name = "Products")
 public class Product {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "ProductID", nullable = false)
-    private UUID id;
-
-    @Nationalized
-    @Column(name = "ProductName", nullable = false)
+    private UUID productID;
     private String productName;
-
-    @Nationalized
-    @Column(name = "SKU", nullable = false, length = 100)
     private String sku;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "CategoryID", nullable = false)
-    private Category categoryID;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "BrandID", nullable = false)
-    private Brand brandID;
-
-    @Nationalized
-    @Lob
-    @Column(name = "Description")
+    private UUID categoryID;
+    private UUID brandID;
     private String description;
-
-    @Nationalized
-    @Column(name = "ShortDescription", length = 500)
     private String shortDescription;
-
-    @Column(name = "Price", nullable = false, precision = 18, scale = 2)
     private BigDecimal price;
-
-    @Column(name = "ComparePrice", precision = 18, scale = 2)
     private BigDecimal comparePrice;
-
-    @Column(name = "CostPrice", precision = 18, scale = 2)
     private BigDecimal costPrice;
-
-    @Column(name = "Weight", precision = 10, scale = 2)
     private BigDecimal weight;
-
-    @Nationalized
-    @Column(name = "Dimensions", length = 100)
     private String dimensions;
-
-    @ColumnDefault("0")
-    @Column(name = "StockQuantity", nullable = false)
-    private Integer stockQuantity;
-
-    @ColumnDefault("5")
-    @Column(name = "MinStockLevel")
-    private Integer minStockLevel;
-
-    @ColumnDefault("1000")
-    @Column(name = "MaxStockLevel")
-    private Integer maxStockLevel;
-
-    @ColumnDefault("1")
-    @Column(name = "IsActive")
-    private Boolean isActive;
-
-    @ColumnDefault("0")
-    @Column(name = "IsFeatured")
-    private Boolean isFeatured;
-
-    @ColumnDefault("0")
-    @Column(name = "ViewCount")
-    private Integer viewCount;
-
-    @ColumnDefault("0")
-    @Column(name = "SalesCount")
-    private Integer salesCount;
-
-    @ColumnDefault("0")
-    @Column(name = "AverageRating", precision = 3, scale = 2)
+    private int stockQuantity;
+    private int minStockLevel;
+    private int maxStockLevel;
+    private boolean isActive;
+    private boolean isFeatured;
+    private int viewCount;
+    private int salesCount;
     private BigDecimal averageRating;
+    private int reviewCount;
+    private LocalDateTime createdDate;
+    private LocalDateTime modifiedDate;
+    private Category category;
+    private Brand brand;
+    private List<ProductImage> images;
+    private List<ProductSpecification> specifications;
+    private List<ProductReview> reviews;
+    private List<ShoppingCart> shoppingCartItems;
+    private List<Wishlist> wishlistItems;
+    private List<OrderItem> orderItems;
+    private List<InventoryTransaction> inventoryTransactions;
 
-    @ColumnDefault("0")
-    @Column(name = "ReviewCount")
-    private Integer reviewCount;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "ModifiedDate")
-    private Instant modifiedDate;
-
-    public UUID getId() {
-        return id;
+    public Product() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public Product(UUID productID, String productName, String sku, UUID categoryID, UUID brandID, String description,
+                   String shortDescription, BigDecimal price, BigDecimal comparePrice, BigDecimal costPrice,
+                   BigDecimal weight, String dimensions, int stockQuantity, int minStockLevel, int maxStockLevel,
+                   boolean isActive, boolean isFeatured, int viewCount, int salesCount, BigDecimal averageRating,
+                   int reviewCount, LocalDateTime createdDate, LocalDateTime modifiedDate) {
+        this.productID = productID;
+        this.productName = productName;
+        this.sku = sku;
+        this.categoryID = categoryID;
+        this.brandID = brandID;
+        this.description = description;
+        this.shortDescription = shortDescription;
+        this.price = price;
+        this.comparePrice = comparePrice;
+        this.costPrice = costPrice;
+        this.weight = weight;
+        this.dimensions = dimensions;
+        this.stockQuantity = stockQuantity;
+        this.minStockLevel = minStockLevel;
+        this.maxStockLevel = maxStockLevel;
+        this.isActive = isActive;
+        this.isFeatured = isFeatured;
+        this.viewCount = viewCount;
+        this.salesCount = salesCount;
+        this.averageRating = averageRating;
+        this.reviewCount = reviewCount;
+        this.createdDate = createdDate;
+        this.modifiedDate = modifiedDate;
+    }
+
+    public UUID getProductID() {
+        return productID;
+    }
+
+    public void setProductID(UUID productID) {
+        this.productID = productID;
     }
 
     public String getProductName() {
@@ -125,19 +96,19 @@ public class Product {
         this.sku = sku;
     }
 
-    public Category getCategoryID() {
+    public UUID getCategoryID() {
         return categoryID;
     }
 
-    public void setCategoryID(Category categoryID) {
+    public void setCategoryID(UUID categoryID) {
         this.categoryID = categoryID;
     }
 
-    public Brand getBrandID() {
+    public UUID getBrandID() {
         return brandID;
     }
 
-    public void setBrandID(Brand brandID) {
+    public void setBrandID(UUID brandID) {
         this.brandID = brandID;
     }
 
@@ -197,59 +168,59 @@ public class Product {
         this.dimensions = dimensions;
     }
 
-    public Integer getStockQuantity() {
+    public int getStockQuantity() {
         return stockQuantity;
     }
 
-    public void setStockQuantity(Integer stockQuantity) {
+    public void setStockQuantity(int stockQuantity) {
         this.stockQuantity = stockQuantity;
     }
 
-    public Integer getMinStockLevel() {
+    public int getMinStockLevel() {
         return minStockLevel;
     }
 
-    public void setMinStockLevel(Integer minStockLevel) {
+    public void setMinStockLevel(int minStockLevel) {
         this.minStockLevel = minStockLevel;
     }
 
-    public Integer getMaxStockLevel() {
+    public int getMaxStockLevel() {
         return maxStockLevel;
     }
 
-    public void setMaxStockLevel(Integer maxStockLevel) {
+    public void setMaxStockLevel(int maxStockLevel) {
         this.maxStockLevel = maxStockLevel;
     }
 
-    public Boolean getIsActive() {
+    public boolean isActive() {
         return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
-    public Boolean getIsFeatured() {
+    public boolean isFeatured() {
         return isFeatured;
     }
 
-    public void setIsFeatured(Boolean isFeatured) {
-        this.isFeatured = isFeatured;
+    public void setFeatured(boolean featured) {
+        isFeatured = featured;
     }
 
-    public Integer getViewCount() {
+    public int getViewCount() {
         return viewCount;
     }
 
-    public void setViewCount(Integer viewCount) {
+    public void setViewCount(int viewCount) {
         this.viewCount = viewCount;
     }
 
-    public Integer getSalesCount() {
+    public int getSalesCount() {
         return salesCount;
     }
 
-    public void setSalesCount(Integer salesCount) {
+    public void setSalesCount(int salesCount) {
         this.salesCount = salesCount;
     }
 
@@ -261,28 +232,99 @@ public class Product {
         this.averageRating = averageRating;
     }
 
-    public Integer getReviewCount() {
+    public int getReviewCount() {
         return reviewCount;
     }
 
-    public void setReviewCount(Integer reviewCount) {
+    public void setReviewCount(int reviewCount) {
         this.reviewCount = reviewCount;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
-    public Instant getModifiedDate() {
+    public LocalDateTime getModifiedDate() {
         return modifiedDate;
     }
 
-    public void setModifiedDate(Instant modifiedDate) {
+    public void setModifiedDate(LocalDateTime modifiedDate) {
         this.modifiedDate = modifiedDate;
     }
 
+    public Category getCategory() {
+        return category;
+    }
+
+    public void setCategory(Category category) {
+        this.category = category;
+    }
+
+    public Brand getBrand() {
+        return brand;
+    }
+
+    public void setBrand(Brand brand) {
+        this.brand = brand;
+    }
+
+    public List<ProductImage> getImages() {
+        return images;
+    }
+
+    public void setImages(List<ProductImage> images) {
+        this.images = images;
+    }
+
+    public List<ProductSpecification> getSpecifications() {
+        return specifications;
+    }
+
+    public void setSpecifications(List<ProductSpecification> specifications) {
+        this.specifications = specifications;
+    }
+
+    public List<ProductReview> getReviews() {
+        return reviews;
+    }
+
+    public void setReviews(List<ProductReview> reviews) {
+        this.reviews = reviews;
+    }
+
+    public List<ShoppingCart> getShoppingCartItems() {
+        return shoppingCartItems;
+    }
+
+    public void setShoppingCartItems(List<ShoppingCart> shoppingCartItems) {
+        this.shoppingCartItems = shoppingCartItems;
+    }
+
+    public List<Wishlist> getWishlistItems() {
+        return wishlistItems;
+    }
+
+    public void setWishlistItems(List<Wishlist> wishlistItems) {
+        this.wishlistItems = wishlistItems;
+    }
+
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
+    }
+
+    public void setOrderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
+    }
+
+    public List<InventoryTransaction> getInventoryTransactions() {
+        return inventoryTransactions;
+    }
+
+    public void setInventoryTransactions(List<InventoryTransaction> inventoryTransactions) {
+        this.inventoryTransactions = inventoryTransactions;
+    }
 }

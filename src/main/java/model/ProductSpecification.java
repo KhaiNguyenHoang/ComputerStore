@@ -1,52 +1,42 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
 import java.util.UUID;
 
-@Entity
-@Table(name = "ProductSpecifications")
 public class ProductSpecification {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "SpecID", nullable = false)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductID", nullable = false)
-    private Product productID;
-
-    @Nationalized
-    @Column(name = "SpecName", nullable = false, length = 100)
+    private UUID specID;
+    private UUID productID;
     private String specName;
-
-    @Nationalized
-    @Column(name = "SpecValue", nullable = false)
     private String specValue;
-
-    @Nationalized
-    @Column(name = "SpecGroup", length = 100)
     private String specGroup;
+    private int displayOrder;
+    private Product product;
 
-    @ColumnDefault("0")
-    @Column(name = "DisplayOrder")
-    private Integer displayOrder;
-
-    public UUID getId() {
-        return id;
+    public ProductSpecification() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public ProductSpecification(UUID specID, UUID productID, String specName, String specValue, String specGroup,
+                                int displayOrder) {
+        this.specID = specID;
+        this.productID = productID;
+        this.specName = specName;
+        this.specValue = specValue;
+        this.specGroup = specGroup;
+        this.displayOrder = displayOrder;
     }
 
-    public Product getProductID() {
+    public UUID getSpecID() {
+        return specID;
+    }
+
+    public void setSpecID(UUID specID) {
+        this.specID = specID;
+    }
+
+    public UUID getProductID() {
         return productID;
     }
 
-    public void setProductID(Product productID) {
+    public void setProductID(UUID productID) {
         this.productID = productID;
     }
 
@@ -74,12 +64,19 @@ public class ProductSpecification {
         this.specGroup = specGroup;
     }
 
-    public Integer getDisplayOrder() {
+    public int getDisplayOrder() {
         return displayOrder;
     }
 
-    public void setDisplayOrder(Integer displayOrder) {
+    public void setDisplayOrder(int displayOrder) {
         this.displayOrder = displayOrder;
     }
 
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
 }

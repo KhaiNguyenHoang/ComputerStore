@@ -1,66 +1,56 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
 import java.math.BigDecimal;
 import java.util.UUID;
 
-@Entity
-@Table(name = "OrderItems")
 public class OrderItem {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "OrderItemID", nullable = false)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "OrderID", nullable = false)
-    private Order orderID;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductID", nullable = false)
-    private Product productID;
-
-    @Nationalized
-    @Column(name = "ProductName", nullable = false)
+    private UUID orderItemID;
+    private UUID orderID;
+    private UUID productID;
     private String productName;
-
-    @Nationalized
-    @Column(name = "SKU", nullable = false, length = 100)
     private String sku;
-
-    @Column(name = "Quantity", nullable = false)
-    private Integer quantity;
-
-    @Column(name = "UnitPrice", nullable = false, precision = 18, scale = 2)
+    private int quantity;
     private BigDecimal unitPrice;
-
-    @Column(name = "TotalPrice", nullable = false, precision = 18, scale = 2)
     private BigDecimal totalPrice;
+    private Order order;
+    private Product product;
 
-    public UUID getId() {
-        return id;
+    public OrderItem() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public OrderItem(UUID orderItemID, UUID orderID, UUID productID, String productName, String sku, int quantity,
+                     BigDecimal unitPrice, BigDecimal totalPrice) {
+        this.orderItemID = orderItemID;
+        this.orderID = orderID;
+        this.productID = productID;
+        this.productName = productName;
+        this.sku = sku;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.totalPrice = totalPrice;
     }
 
-    public Order getOrderID() {
+    public UUID getOrderItemID() {
+        return orderItemID;
+    }
+
+    public void setOrderItemID(UUID orderItemID) {
+        this.orderItemID = orderItemID;
+    }
+
+    public UUID getOrderID() {
         return orderID;
     }
 
-    public void setOrderID(Order orderID) {
+    public void setOrderID(UUID orderID) {
         this.orderID = orderID;
     }
 
-    public Product getProductID() {
+    public UUID getProductID() {
         return productID;
     }
 
-    public void setProductID(Product productID) {
+    public void setProductID(UUID productID) {
         this.productID = productID;
     }
 
@@ -80,11 +70,11 @@ public class OrderItem {
         this.sku = sku;
     }
 
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) {
+    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 
@@ -104,4 +94,19 @@ public class OrderItem {
         this.totalPrice = totalPrice;
     }
 
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
 }

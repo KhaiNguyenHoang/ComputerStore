@@ -1,89 +1,71 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "ProductReviews")
 public class ProductReview {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "ReviewID", nullable = false)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductID", nullable = false)
-    private Product productID;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserID", nullable = false)
-    private User userID;
-
-    @Column(name = "Rating", nullable = false)
-    private Integer rating;
-
-    @Nationalized
-    @Column(name = "Title")
+    private UUID reviewID;
+    private UUID productID;
+    private UUID userID;
+    private int rating;
     private String title;
-
-    @Nationalized
-    @Lob
-    @Column(name = "ReviewText")
     private String reviewText;
+    private boolean isVerifiedPurchase;
+    private boolean isPublished;
+    private int helpfulCount;
+    private LocalDateTime createdDate;
+    private LocalDateTime modifiedDate;
+    private Product product;
+    private User user;
 
-    @ColumnDefault("0")
-    @Column(name = "IsVerifiedPurchase")
-    private Boolean isVerifiedPurchase;
-
-    @ColumnDefault("1")
-    @Column(name = "IsPublished")
-    private Boolean isPublished;
-
-    @ColumnDefault("0")
-    @Column(name = "HelpfulCount")
-    private Integer helpfulCount;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "ModifiedDate")
-    private Instant modifiedDate;
-
-    public UUID getId() {
-        return id;
+    public ProductReview() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public ProductReview(UUID reviewID, UUID productID, UUID userID, int rating, String title, String reviewText,
+                         boolean isVerifiedPurchase, boolean isPublished, int helpfulCount, LocalDateTime createdDate,
+                         LocalDateTime modifiedDate) {
+        this.reviewID = reviewID;
+        this.productID = productID;
+        this.userID = userID;
+        this.rating = rating;
+        this.title = title;
+        this.reviewText = reviewText;
+        this.isVerifiedPurchase = isVerifiedPurchase;
+        this.isPublished = isPublished;
+        this.helpfulCount = helpfulCount;
+        this.createdDate = createdDate;
+        this.modifiedDate = modifiedDate;
     }
 
-    public Product getProductID() {
+    public UUID getReviewID() {
+        return reviewID;
+    }
+
+    public void setReviewID(UUID reviewID) {
+        this.reviewID = reviewID;
+    }
+
+    public UUID getProductID() {
         return productID;
     }
 
-    public void setProductID(Product productID) {
+    public void setProductID(UUID productID) {
         this.productID = productID;
     }
 
-    public User getUserID() {
+    public UUID getUserID() {
         return userID;
     }
 
-    public void setUserID(User userID) {
+    public void setUserID(UUID userID) {
         this.userID = userID;
     }
 
-    public Integer getRating() {
+    public int getRating() {
         return rating;
     }
 
-    public void setRating(Integer rating) {
+    public void setRating(int rating) {
         this.rating = rating;
     }
 
@@ -103,44 +85,59 @@ public class ProductReview {
         this.reviewText = reviewText;
     }
 
-    public Boolean getIsVerifiedPurchase() {
+    public boolean isVerifiedPurchase() {
         return isVerifiedPurchase;
     }
 
-    public void setIsVerifiedPurchase(Boolean isVerifiedPurchase) {
-        this.isVerifiedPurchase = isVerifiedPurchase;
+    public void setVerifiedPurchase(boolean verifiedPurchase) {
+        isVerifiedPurchase = verifiedPurchase;
     }
 
-    public Boolean getIsPublished() {
+    public boolean isPublished() {
         return isPublished;
     }
 
-    public void setIsPublished(Boolean isPublished) {
-        this.isPublished = isPublished;
+    public void setPublished(boolean published) {
+        isPublished = published;
     }
 
-    public Integer getHelpfulCount() {
+    public int getHelpfulCount() {
         return helpfulCount;
     }
 
-    public void setHelpfulCount(Integer helpfulCount) {
+    public void setHelpfulCount(int helpfulCount) {
         this.helpfulCount = helpfulCount;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
-    public Instant getModifiedDate() {
+    public LocalDateTime getModifiedDate() {
         return modifiedDate;
     }
 
-    public void setModifiedDate(Instant modifiedDate) {
+    public void setModifiedDate(LocalDateTime modifiedDate) {
         this.modifiedDate = modifiedDate;
     }
 
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
 }

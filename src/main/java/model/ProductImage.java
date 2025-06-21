@@ -1,57 +1,45 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
-
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "ProductImages")
 public class ProductImage {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "ImageID", nullable = false)
-    private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductID", nullable = false)
-    private Product productID;
-
-    @Nationalized
-    @Column(name = "ImageURL", nullable = false, length = 500)
+    private UUID imageID;
+    private UUID productID;
     private String imageURL;
-
-    @Nationalized
-    @Column(name = "AltText")
     private String altText;
+    private int displayOrder;
+    private boolean isMainImage;
+    private LocalDateTime createdDate;
+    private Product product;
 
-    @ColumnDefault("0")
-    @Column(name = "DisplayOrder")
-    private Integer displayOrder;
-
-    @ColumnDefault("0")
-    @Column(name = "IsMainImage")
-    private Boolean isMainImage;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    public UUID getId() {
-        return id;
+    public ProductImage() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
+    public ProductImage(UUID imageID, UUID productID, String imageURL, String altText, int displayOrder,
+                        boolean isMainImage, LocalDateTime createdDate) {
+        this.imageID = imageID;
+        this.productID = productID;
+        this.imageURL = imageURL;
+        this.altText = altText;
+        this.displayOrder = displayOrder;
+        this.isMainImage = isMainImage;
+        this.createdDate = createdDate;
     }
 
-    public Product getProductID() {
+    public UUID getImageID() {
+        return imageID;
+    }
+
+    public void setImageID(UUID imageID) {
+        this.imageID = imageID;
+    }
+
+    public UUID getProductID() {
         return productID;
     }
 
-    public void setProductID(Product productID) {
+    public void setProductID(UUID productID) {
         this.productID = productID;
     }
 
@@ -71,28 +59,35 @@ public class ProductImage {
         this.altText = altText;
     }
 
-    public Integer getDisplayOrder() {
+    public int getDisplayOrder() {
         return displayOrder;
     }
 
-    public void setDisplayOrder(Integer displayOrder) {
+    public void setDisplayOrder(int displayOrder) {
         this.displayOrder = displayOrder;
     }
 
-    public Boolean getIsMainImage() {
+    public boolean isMainImage() {
         return isMainImage;
     }
 
-    public void setIsMainImage(Boolean isMainImage) {
-        this.isMainImage = isMainImage;
+    public void setMainImage(boolean mainImage) {
+        isMainImage = mainImage;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
 }

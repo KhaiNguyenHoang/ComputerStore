@@ -1,61 +1,71 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
-@Table(name = "Wishlists")
 public class Wishlist {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "WishlistID", nullable = false)
-    private UUID id;
+    private UUID wishlistID;
+    private UUID userID;
+    private UUID productID;
+    private LocalDateTime addedDate;
+    private User user;
+    private Product product;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserID", nullable = false)
-    private User userID;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "ProductID", nullable = false)
-    private Product productID;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "AddedDate")
-    private Instant addedDate;
-
-    public UUID getId() {
-        return id;
+    public Wishlist() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public User getUserID() {
-        return userID;
-    }
-
-    public void setUserID(User userID) {
+    public Wishlist(UUID wishlistID, UUID userID, UUID productID, LocalDateTime addedDate) {
+        this.wishlistID = wishlistID;
         this.userID = userID;
-    }
-
-    public Product getProductID() {
-        return productID;
-    }
-
-    public void setProductID(Product productID) {
         this.productID = productID;
-    }
-
-    public Instant getAddedDate() {
-        return addedDate;
-    }
-
-    public void setAddedDate(Instant addedDate) {
         this.addedDate = addedDate;
     }
 
+    public UUID getWishlistID() {
+        return wishlistID;
+    }
+
+    public void setWishlistID(UUID wishlistID) {
+        this.wishlistID = wishlistID;
+    }
+
+    public UUID getUserID() {
+        return userID;
+    }
+
+    public void setUserID(UUID userID) {
+        this.userID = userID;
+    }
+
+    public UUID getProductID() {
+        return productID;
+    }
+
+    public void setProductID(UUID productID) {
+        this.productID = productID;
+    }
+
+    public LocalDateTime getAddedDate() {
+        return addedDate;
+    }
+
+    public void setAddedDate(LocalDateTime addedDate) {
+        this.addedDate = addedDate;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Product getProduct() {
+        return product;
+    }
+
+    public void setProduct(Product product) {
+        this.product = product;
+    }
 }

@@ -1,72 +1,90 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
-@Entity
 public class UserCouponUsage {
-    @Id
-    @ColumnDefault("newid()")
-    @Column(name = "UsageID", nullable = false)
-    private UUID id;
+    private UUID usageID;
+    private UUID userID;
+    private UUID couponID;
+    private UUID orderID;
+    private LocalDateTime usedDate;
+    private User user;
+    private Coupon coupon;
+    private Order order;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "UserID", nullable = false)
-    private User userID;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "CouponID", nullable = false)
-    private Coupon couponID;
-
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "OrderID", nullable = false)
-    private Order orderID;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "UsedDate")
-    private Instant usedDate;
-
-    public UUID getId() {
-        return id;
+    public UserCouponUsage() {
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public User getUserID() {
-        return userID;
-    }
-
-    public void setUserID(User userID) {
+    public UserCouponUsage(UUID usageID, UUID userID, UUID couponID, UUID orderID, LocalDateTime usedDate) {
+        this.usageID = usageID;
         this.userID = userID;
-    }
-
-    public Coupon getCouponID() {
-        return couponID;
-    }
-
-    public void setCouponID(Coupon couponID) {
         this.couponID = couponID;
-    }
-
-    public Order getOrderID() {
-        return orderID;
-    }
-
-    public void setOrderID(Order orderID) {
         this.orderID = orderID;
-    }
-
-    public Instant getUsedDate() {
-        return usedDate;
-    }
-
-    public void setUsedDate(Instant usedDate) {
         this.usedDate = usedDate;
     }
 
+    public UUID getUsageID() {
+        return usageID;
+    }
+
+    public void setUsageID(UUID usageID) {
+        this.usageID = usageID;
+    }
+
+    public UUID getUserID() {
+        return userID;
+    }
+
+    public void setUserID(UUID userID) {
+        this.userID = userID;
+    }
+
+    public UUID getCouponID() {
+        return couponID;
+    }
+
+    public void setCouponID(UUID couponID) {
+        this.couponID = couponID;
+    }
+
+    public UUID getOrderID() {
+        return orderID;
+    }
+
+    public void setOrderID(UUID orderID) {
+        this.orderID = orderID;
+    }
+
+    public LocalDateTime getUsedDate() {
+        return usedDate;
+    }
+
+    public void setUsedDate(LocalDateTime usedDate) {
+        this.usedDate = usedDate;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
+    public Coupon getCoupon() {
+        return coupon;
+    }
+
+    public void setCoupon(Coupon coupon) {
+        this.coupon = coupon;
+    }
+
+    public Order getOrder() {
+        return order;
+    }
+
+    public void setOrder(Order order) {
+        this.order = order;
+    }
 }

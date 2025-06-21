@@ -1,48 +1,43 @@
 package model;
 
-import jakarta.persistence.*;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.Nationalized;
+import model.Product;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
 
-@Entity
-@Table(name = "Categories")
 public class Category {
-    @Id
-    @Column(name = "CategoryID", nullable = false)
-    private Integer id;
-
-    @Nationalized
-    @Column(name = "CategoryName", nullable = false, length = 100)
+    private UUID categoryID;
     private String categoryName;
-
-    @Nationalized
-    @Column(name = "Description", length = 500)
     private String description;
+    private UUID parentCategoryID;
+    private boolean isActive;
+    private LocalDateTime createdDate;
+    private LocalDateTime modifiedDate;
+    private Category parentCategory;
+    private List<Category> subCategories;
+    private List<Product> products;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ParentCategoryID")
-    private Category parentCategoryID;
-
-    @ColumnDefault("1")
-    @Column(name = "IsActive")
-    private Boolean isActive;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "CreatedDate")
-    private Instant createdDate;
-
-    @ColumnDefault("getdate()")
-    @Column(name = "ModifiedDate")
-    private Instant modifiedDate;
-
-    public Integer getId() {
-        return id;
+    public Category() {
     }
 
-    public void setId(Integer id) {
-        this.id = id;
+    public Category(UUID categoryID, String categoryName, String description, UUID parentCategoryID, boolean isActive,
+                    LocalDateTime createdDate, LocalDateTime modifiedDate) {
+        this.categoryID = categoryID;
+        this.categoryName = categoryName;
+        this.description = description;
+        this.parentCategoryID = parentCategoryID;
+        this.isActive = isActive;
+        this.createdDate = createdDate;
+        this.modifiedDate = modifiedDate;
+    }
+
+    public UUID getCategoryID() {
+        return categoryID;
+    }
+
+    public void setCategoryID(UUID categoryID) {
+        this.categoryID = categoryID;
     }
 
     public String getCategoryName() {
@@ -61,36 +56,59 @@ public class Category {
         this.description = description;
     }
 
-    public Category getParentCategoryID() {
+    public UUID getParentCategoryID() {
         return parentCategoryID;
     }
 
-    public void setParentCategoryID(Category parentCategoryID) {
+    public void setParentCategoryID(UUID parentCategoryID) {
         this.parentCategoryID = parentCategoryID;
     }
 
-    public Boolean getIsActive() {
+    public boolean isActive() {
         return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
-        this.isActive = isActive;
+    public void setActive(boolean active) {
+        isActive = active;
     }
 
-    public Instant getCreatedDate() {
+    public LocalDateTime getCreatedDate() {
         return createdDate;
     }
 
-    public void setCreatedDate(Instant createdDate) {
+    public void setCreatedDate(LocalDateTime createdDate) {
         this.createdDate = createdDate;
     }
 
-    public Instant getModifiedDate() {
+    public LocalDateTime getModifiedDate() {
         return modifiedDate;
     }
 
-    public void setModifiedDate(Instant modifiedDate) {
+    public void setModifiedDate(LocalDateTime modifiedDate) {
         this.modifiedDate = modifiedDate;
     }
 
+    public Category getParentCategory() {
+        return parentCategory;
+    }
+
+    public void setParentCategory(Category parentCategory) {
+        this.parentCategory = parentCategory;
+    }
+
+    public List<Category> getSubCategories() {
+        return subCategories;
+    }
+
+    public void setSubCategories(List<Category> subCategories) {
+        this.subCategories = subCategories;
+    }
+
+    public List<Product> getProducts() {
+        return products;
+    }
+
+    public void setProducts(List<Product> products) {
+        this.products = products;
+    }
 }

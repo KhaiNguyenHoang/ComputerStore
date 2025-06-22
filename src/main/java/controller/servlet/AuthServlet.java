@@ -164,12 +164,6 @@ public class AuthServlet extends HttpServlet {
             return;
         }
 
-        if (!password.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{8,}$")) {
-            request.setAttribute("error", "Password must be at least 8 characters long, contain at least one uppercase letter, one number, and one special character.");
-            request.getRequestDispatcher("register.jsp").forward(request, response);
-            return;
-        }
-
         LocalDate dob = null;
         if (dateOfBirth != null && !dateOfBirth.trim().isEmpty()) {
             try {

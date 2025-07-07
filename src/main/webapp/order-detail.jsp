@@ -34,12 +34,14 @@
         }
         .main-content {
             flex-grow: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            padding: 20px 0; /* Add some vertical padding */
         }
         .container {
             margin: 0 auto; /* Center the container horizontally */
+            max-width: 960px; /* Limit width for better readability on large screens */
+            /* Add some top/bottom margin for spacing */
+            margin-top: 20px;
+            margin-bottom: 20px;
         }
         .footer {
             background-color: #212529;

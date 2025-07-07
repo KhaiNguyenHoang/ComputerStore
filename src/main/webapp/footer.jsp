@@ -2,7 +2,7 @@
 
 <!-- Footer -->
 <footer class="footer">
-    <div class="container">
+    <div class="container mx-auto">
         <p>&copy; 2024 ComputerStore. All rights reserved.</p>
         <p>
             <a href="#">Chính sách bảo mật</a> |

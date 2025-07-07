@@ -1,3 +1,6 @@
+<%@ page import="dto.ProductReviewResponseDTO" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.text.SimpleDateFormat" %>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/fmt" prefix="fmt" %>
@@ -56,6 +59,67 @@
         .star-rating label:hover, .star-rating label:hover ~ label,
         .star-rating input[type="radio"]:checked ~ label {
             color: #ffc107;
+        }
+        .review-item {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            background-color: #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,.05);
+        }
+        .review-item .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .review-item .reviewer-info {
+            font-size: 1.1em;
+            color: #333;
+        }
+        .review-item .review-date {
+            font-size: 0.9em;
+            color: #777;
+        }
+        .review-item .review-rating {
+            font-size: 1.3em;
+            color: #ffc107; /* Star color */
+            margin-bottom: 8px;
+        }
+        .review-item .review-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 5px;
+        }
+        .review-item .review-text {
+            color: #666;
+            line-height: 1.6;
+        }
+        .verified-badge {
+            background-color: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .footer {
+            background-color: #343a40; /* Dark background */
+            color: #ffffff; /* White text */
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 40px; /* Add some space above the footer */
+        }
+        .footer a {
+            color: #cccccc;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            color: #ffffff;
+            text-decoration: underline;
         }
     </style>
 </head>
@@ -181,11 +245,40 @@
                     <p class="text-center text-muted">Vui lòng <a href="${pageContext.request.contextPath}/login">đăng nhập</a> để gửi đánh giá.</p>
                 </c:if>
 
-                <h3 class="mb-3">Các đánh giá khác (${requestScope.product.reviewCount})</h3>
-
-                <c:if test="${empty requestScope.publishedReviews}">
-                    <p class="text-center text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
-                </c:if>
+                <h3 class="mb-3">Các đánh giá khác (<%= request.getAttribute("product") != null ? ((model.Product)request.getAttribute("product")).getReviewCount() : 0 %>)</h3>
+                <% 
+                    List<ProductReviewResponseDTO> publishedReviews = (List<ProductReviewResponseDTO>) request.getAttribute("publishedReviews");
+                    if (publishedReviews == null || publishedReviews.isEmpty()) {
+                %>
+                        <p class="text-center text-muted">Chưa có đánh giá nào cho sản phẩm này.</p>
+                <% 
+                    } else {
+                        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+                        for (ProductReviewResponseDTO review : publishedReviews) {
+                %>
+                            <div class="review-item">
+                                <div class="review-header">
+                                    <span class="reviewer-info">
+                                        <%= review.getUserFullName() %> (<%= review.getUsername() %>)
+                                        <% if (review.isVerifiedPurchase()) { %>
+                                            <span class="verified-badge">Đã xác minh mua hàng</span>
+                                        <% } %>
+                                    </span>
+                                    <span class="review-date"><%= sdf.format(review.getCreatedDateAsDate()) %></span>
+                                </div>
+                                <div class="review-rating">
+                                    <% for (int i = 1; i <= 5; i++) { %>
+                                        <% if (i <= review.getRating()) { %>&#9733;<% } else { %>&#9734;<% } %>
+                                    <% } %>
+                                </div>
+                                <p class="review-title"><%= review.getTitle() %></p>
+                                <p class="review-text"><%= review.getReviewText() %></p>
+                            </div>
+                <% 
+                        }
+                    }
+                %>
+            </div>
         </c:if>
         <c:if test="${empty requestScope.product}">
             <div class="alert alert-danger text-center" role="alert">

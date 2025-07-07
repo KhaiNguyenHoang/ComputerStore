@@ -612,12 +612,6 @@ public class AuthDAO extends DBContext {
     }
 
     public static void main(String[] args) {
-        AuthDAO authDAO = new AuthDAO(new EmailService(new FileService()));
-        if (authDAO.resetPassword("C37A3AF5-1208-4355-AD31-8918B884DDA1","Khaideptrai1234sd#"))
-        {
-            System.out.println("Password reset successful");
-        } else {
-            System.out.println("Password reset failed");
-        }
+        
     }
 }

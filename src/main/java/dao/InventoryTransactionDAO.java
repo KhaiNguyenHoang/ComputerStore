@@ -5,6 +5,7 @@ import model.Product;
 import model.User;
 import util.DBContext;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,7 +16,7 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class InventoryTransactionDAO extends DBContext {
+public class InventoryTransactionDAO {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(InventoryTransactionDAO.class);
     private final ProductDAO productDAO = new ProductDAO();
@@ -31,7 +32,7 @@ public class InventoryTransactionDAO extends DBContext {
      * @param transaction Đối tượng InventoryTransaction cần thêm.
      * @return true nếu thêm thành công, false nếu thất bại.
      */
-    public boolean addTransaction(InventoryTransaction transaction) {
+    public boolean addTransaction(InventoryTransaction transaction, Connection connection) {
         String sql = "INSERT INTO InventoryTransactions (TransactionID, ProductID, TransactionType, Quantity, " +
                 "ReferenceType, ReferenceID, Notes, CreatedDate, CreatedBy) " +
                 "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -49,9 +50,9 @@ public class InventoryTransactionDAO extends DBContext {
             stmt.setTimestamp(8, java.sql.Timestamp.valueOf(LocalDateTime.now()));
             stmt.setString(9, transaction.getCreatedBy() != null ? transaction.getCreatedBy().toString() : null);
 
+            LOGGER.info("InventoryTransactionDAO: Executing update for transaction ID {}.", newId);
             int rowsAffected = stmt.executeUpdate();
-            LOGGER.info("Added new inventory transaction for product {}. Type: {}. Quantity: {}",
-                    transaction.getProductID(), transaction.getTransactionType(), transaction.getQuantity());
+            LOGGER.info("InventoryTransactionDAO: Update executed. Rows affected: {} for transaction ID {}.", rowsAffected, newId);
             return rowsAffected > 0;
         } catch (SQLException e) {
             LOGGER.error("Error adding inventory transaction for product {}: {}", transaction.getProductID(), e.getMessage(), e);
@@ -63,7 +64,7 @@ public class InventoryTransactionDAO extends DBContext {
      * Lấy tất cả các giao dịch tồn kho.
      * @return Danh sách các đối tượng InventoryTransaction.
      */
-    public List<InventoryTransaction> getAllTransactions() {
+    public List<InventoryTransaction> getAllTransactions(Connection connection) {
         List<InventoryTransaction> transactions = new ArrayList<>();
         String sql = "SELECT it.TransactionID, it.ProductID, it.TransactionType, it.Quantity, " +
                 "it.ReferenceType, it.ReferenceID, it.Notes, it.CreatedDate, it.CreatedBy, " +

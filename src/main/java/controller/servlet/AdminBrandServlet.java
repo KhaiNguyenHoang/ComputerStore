@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -166,7 +168,7 @@ public class AdminBrandServlet extends HttpServlet {
         }
 
         if (brandDAO.addBrand(brand) != null) {
-            response.sendRedirect(request.getContextPath() + "/admin/brands?message=Thương hiệu đã được thêm thành công.");
+            response.sendRedirect(request.getContextPath() + "/admin/brands?message=" + URLEncoder.encode("Thương hiệu đã được thêm thành công.", StandardCharsets.UTF_8.toString()));
         } else {
             request.setAttribute("errorMessage", "Không thể thêm thương hiệu. Vui lòng kiểm tra tên thương hiệu hoặc các thông tin khác.");
             request.setAttribute("brand", brand); // Giữ lại dữ liệu đã nhập
@@ -193,7 +195,7 @@ public class AdminBrandServlet extends HttpServlet {
             brand.setBrandID(brandId); // Đảm bảo ID được giữ nguyên
 
             if (brandDAO.updateBrand(brand)) {
-                response.sendRedirect(request.getContextPath() + "/admin/brands?message=Thương hiệu đã được cập nhật thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/brands?message=" + URLEncoder.encode("Thương hiệu đã được cập nhật thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể cập nhật thương hiệu. Vui lòng thử lại.");
                 request.setAttribute("brand", brand); // Giữ lại dữ liệu đã nhập
@@ -217,7 +219,7 @@ public class AdminBrandServlet extends HttpServlet {
         try {
             UUID brandId = UUID.fromString(brandIdParam);
             if (brandDAO.deleteBrand(brandId)) {
-                response.sendRedirect(request.getContextPath() + "/admin/brands?message=Thương hiệu đã được xóa thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/brands?message=" + URLEncoder.encode("Thương hiệu đã được xóa thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể xóa thương hiệu. Vui lòng thử lại.");
                 listBrands(request, response);

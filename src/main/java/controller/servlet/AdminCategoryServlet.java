@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
@@ -183,7 +185,7 @@ public class AdminCategoryServlet extends HttpServlet {
         }
 
         if (categoryDAO.addCategory(category) != null) {
-            response.sendRedirect(request.getContextPath() + "/admin/categories?message=Danh mục đã được thêm thành công.");
+            response.sendRedirect(request.getContextPath() + "/admin/categories?message=" + URLEncoder.encode("Danh mục đã được thêm thành công.", StandardCharsets.UTF_8.toString()));
         } else {
             request.setAttribute("errorMessage", "Không thể thêm danh mục. Vui lòng kiểm tra tên danh mục hoặc các thông tin khác.");
             request.setAttribute("category", category); // Giữ lại dữ liệu đã nhập
@@ -210,7 +212,7 @@ public class AdminCategoryServlet extends HttpServlet {
             category.setCategoryID(categoryId); // Đảm bảo ID được giữ nguyên
 
             if (categoryDAO.updateCategory(category)) {
-                response.sendRedirect(request.getContextPath() + "/admin/categories?message=Danh mục đã được cập nhật thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/categories?message=" + URLEncoder.encode("Danh mục đã được cập nhật thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể cập nhật danh mục. Vui lòng thử lại.");
                 request.setAttribute("category", category); // Giữ lại dữ liệu đã nhập
@@ -234,7 +236,7 @@ public class AdminCategoryServlet extends HttpServlet {
         try {
             UUID categoryId = UUID.fromString(categoryIdParam);
             if (categoryDAO.deleteCategory(categoryId)) {
-                response.sendRedirect(request.getContextPath() + "/admin/categories?message=Danh mục đã được xóa thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/categories?message=" + URLEncoder.encode("Danh mục đã được xóa thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể xóa danh mục. Vui lòng thử lại.");
                 listCategories(request, response);

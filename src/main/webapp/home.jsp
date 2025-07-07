@@ -1,67 +1,170 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Trang Chủ</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ComputerStore - Trang Chủ</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; margin: 0; padding: 0; }
-        .header { background-color: #007bff; color: white; padding: 15px 20px; text-align: center; }
-        .header h1 { margin: 0; }
-        .nav { background-color: #333; padding: 10px 20px; text-align: center; }
-        .nav a { color: white; text-decoration: none; margin: 0 15px; font-weight: bold; }
-        .nav a:hover { text-decoration: underline; }
-        .container { max-width: 960px; margin: 20px auto; background-color: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); }
-        .welcome-message { text-align: center; margin-bottom: 20px; }
-        .user-info { border: 1px solid #ddd; padding: 15px; border-radius: 5px; margin-top: 20px; }
-        .user-info p { margin: 5px 0; }
-        .logout-button { display: block; width: 100px; margin: 20px auto; padding: 10px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; text-align: center; text-decoration: none; }
-        .logout-button:hover { background-color: #c82333; }
-        .profile-links { margin-top: 20px; text-align: center; }
-        .profile-links a { display: inline-block; margin: 5px 10px; padding: 10px 15px; background-color: #007bff; color: white; text-decoration: none; border-radius: 5px; }
-        .profile-links a:hover { background-color: #0056b3; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #212529 !important; /* Dark background for navbar */
+        }
+        .navbar-brand, .nav-link {
+            color: #ffffff !important;
+        }
+        .navbar-brand:hover, .nav-link:hover {
+            color: #cccccc !important;
+        }
+        .hero-section {
+            background: url('https://via.placeholder.com/1500x500?text=Amazing+Deals+on+Computers') no-repeat center center/cover;
+            color: white;
+            text-align: center;
+            padding: 100px 0;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5); /* Dark overlay */
+        }
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        .product-card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+        .product-card img {
+            height: 200px;
+            object-fit: cover;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+        .product-card .card-body {
+            padding: 15px;
+        }
+        .product-card .card-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            height: 45px; /* Fixed height for title */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* Limit to 2 lines */
+            -webkit-box-orient: vertical;
+        }
+        .product-card .card-text {
+            font-size: 1.2rem;
+            color: #007bff;
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+        .footer {
+            background-color: #212529;
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .footer a {
+            color: #cccccc;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            color: #ffffff;
+        }
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #343a40;
+        }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>ComputerStore</h1>
+
+    <jsp:include page="header.jsp" />
+
+    <!-- Hero Section -->
+    <div class="hero-section">
+        <div class="container hero-content">
+            <h1 class="display-3 fw-bold">Nâng tầm trải nghiệm công nghệ của bạn</h1>
+            <p class="lead">Khám phá những sản phẩm máy tính và linh kiện mới nhất với giá tốt nhất.</p>
+            <a href="${pageContext.request.contextPath}/products" class="btn btn-primary btn-lg mt-3">Mua Ngay</a>
+        </div>
     </div>
-    <div class="nav">
-        <a href="${pageContext.request.contextPath}/home">Trang Chủ</a>
-        <a href="${pageContext.request.contextPath}/products">Sản Phẩm</a>
-        <a href="${pageContext.request.contextPath}/cart">Giỏ Hàng</a>
-        <a href="${pageContext.request.contextPath}/orders">Đơn Hàng</a>
-        <a href="${pageContext.request.contextPath}/logout">Đăng Xuất</a>
-    </div>
+
+    <!-- Main Content - Featured Products -->
     <div class="container">
-        <div class="welcome-message">
-            <c:if test="${not empty sessionScope.user}">
-                <h2>Xin chào, ${sessionScope.user.firstName} ${sessionScope.user.lastName}!</h2>
-                <p>Bạn đã đăng nhập thành công.</p>
-                <div class="user-info">
-                    <h3>Thông tin tài khoản:</h3>
-                    <p><strong>Username:</strong> ${sessionScope.user.username}</p>
-                    <p><strong>Email:</strong> ${sessionScope.user.email}</p>
-                    <p><strong>Role:</strong> ${sessionScope.user.role}</p>
-                    <p><strong>Trạng thái Email:</strong> <c:choose><c:when test="${sessionScope.user.emailVerified}">Đã xác minh</c:when><c:otherwise>Chưa xác minh</c:otherwise></c:choose></p>
-                </div>
-                <div class="profile-links">
-                    <a href="${pageContext.request.contextPath}/profile">Hồ sơ của tôi</a>
-                    <a href="${pageContext.request.contextPath}/profile/addresses">Quản lý Địa chỉ</a>
-                    <c:if test="${sessionScope.user.role == 'Admin'}">
-                        <a href="${pageContext.request.contextPath}/admin/dashboard">Bảng điều khiển Admin</a>
-                    </c:if>
-                </div>
+        <h2 class="section-title">Sản phẩm nổi bật</h2>
+        <div class="row">
+            <c:if test="${not empty products}">
+                <c:forEach var="product" items="${products}" begin="0" end="7"> <%-- Display up to 8 products --%>
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="card product-card">
+                            <c:set var="mainImage" value="${null}"/>
+                            <c:forEach var="img" items="${product.images}">
+                                <c:if test="${img.mainImage}">
+                                    <c:set var="mainImage" value="${img}"/>
+                                </c:if>
+                            </c:forEach>
+                            <c:choose>
+                                <c:when test="${not empty mainImage}">
+                                    <img src="${pageContext.request.contextPath}/static/images/${mainImage.imageURL.substring(mainImage.imageURL.lastIndexOf('/') + 1)}" class="card-img-top" alt="${product.productName}">
+                                </c:when>
+                                <c:otherwise>
+                                    <img src="https://via.placeholder.com/200x200?text=No+Image" class="card-img-top" alt="${product.productName}">
+                                </c:otherwise>
+                            </c:choose>
+                            <div class="card-body">
+                                <h5 class="card-title">${product.productName}</h5>
+                                <p class="card-text">${product.price} VNĐ</p>
+                                <a href="${pageContext.request.contextPath}/product-detail?id=${product.productID}" class="btn btn-primary btn-sm">Xem chi tiết</a>
+                            </div>
+                        </div>
+                    </div>
+                </c:forEach>
             </c:if>
-            <c:if test="${empty sessionScope.user}">
-                <h2>Chào mừng khách!</h2>
-                <p>Vui lòng <a href="${pageContext.request.contextPath}/login">đăng nhập</a> hoặc <a href="${pageContext.request.contextPath}/register">đăng ký</a> để tiếp tục.</p>
+            <c:if test="${empty products}">
+                <div class="col-12 text-center">
+                    <p>Không có sản phẩm nào để hiển thị.</p>
+                </div>
             </c:if>
         </div>
-        
-        <c:if test="${not empty sessionScope.user}">
-            <a href="${pageContext.request.contextPath}/logout" class="logout-button">Đăng Xuất</a>
-        </c:if>
     </div>
+
+    <jsp:include page="footer.jsp" />
+
 </body>
 </html>

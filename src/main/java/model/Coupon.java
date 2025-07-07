@@ -157,6 +157,19 @@ public class Coupon {
         this.createdDate = createdDate;
     }
 
+    // Helper methods for JSP to format LocalDateTime as java.util.Date
+    public java.util.Date getStartDateAsDate() {
+        return startDate != null ? java.sql.Timestamp.valueOf(startDate) : null;
+    }
+
+    public java.util.Date getEndDateAsDate() {
+        return endDate != null ? java.sql.Timestamp.valueOf(endDate) : null;
+    }
+
+    public java.util.Date getCreatedDateAsDate() {
+        return createdDate != null ? java.sql.Timestamp.valueOf(createdDate) : null;
+    }
+
     public List<UserCouponUsage> getCouponUsages() {
         return couponUsages;
     }

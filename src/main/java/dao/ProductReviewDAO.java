@@ -1,5 +1,6 @@
 package dao;
 
+import controller.servlet.ProductDetailServlet;
 import dto.ProductReviewResponseDTO;
 import model.ProductReview;
 import util.DBContext;
@@ -11,26 +12,26 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProductReviewDAO extends DBContext {
+public class ProductReviewDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProductReviewDAO.class);
+    private Connection connection;
 
-    /**
-     * Thêm một đánh giá mới vào CSDL.
-     * @param review Đối tượng ProductReview để thêm.
-     * @return true nếu thêm thành công, false nếu thất bại.
-     */
+    public ProductReviewDAO(Connection connection) {
+        this.connection = connection;
+    }
     public boolean addReview(ProductReview review) throws SQLException {
-        String sql = "INSERT INTO ProductReviews (ProductID, UserID, Rating, Title, ReviewText, IsVerifiedPurchase, IsPublished, CreatedDate, ModifiedDate) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
+        String sql = "INSERT INTO ProductReviews (ReviewID, ProductID, UserID, Rating, Title, ReviewText, IsVerifiedPurchase, IsPublished, CreatedDate, ModifiedDate) " +
+                "VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), GETDATE())";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, review.getProductID().toString());
-            stmt.setString(2, review.getUserID().toString());
-            stmt.setInt(3, review.getRating());
-            stmt.setString(4, review.getTitle());
-            stmt.setString(5, review.getReviewText());
-            stmt.setBoolean(6, review.isVerifiedPurchase());
-            stmt.setBoolean(7, review.isPublished());
+            stmt.setString(1, UUID.randomUUID().toString());
+            stmt.setString(2, review.getProductID().toString());
+            stmt.setString(3, review.getUserID().toString());
+            stmt.setInt(4, review.getRating());
+            stmt.setString(5, review.getTitle());
+            stmt.setString(6, review.getReviewText());
+            stmt.setBoolean(7, review.isVerifiedPurchase());
+            stmt.setBoolean(8, review.isPublished());
 
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
@@ -134,6 +135,7 @@ public class ProductReviewDAO extends DBContext {
         dto.setTitle(rs.getString("Title"));
         dto.setReviewText(rs.getString("ReviewText"));
         dto.setVerifiedPurchase(rs.getBoolean("IsVerifiedPurchase"));
+        dto.setPublished(rs.getBoolean("IsPublished")); // Add this line
         dto.setHelpfulCount(rs.getInt("HelpfulCount"));
         dto.setCreatedDate(rs.getTimestamp("CreatedDate").toLocalDateTime());
 

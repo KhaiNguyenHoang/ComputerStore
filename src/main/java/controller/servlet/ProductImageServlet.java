@@ -15,6 +15,8 @@ import jakarta.servlet.http.HttpSession;
 import jakarta.servlet.http.Part;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -168,7 +170,7 @@ public class ProductImageServlet extends HttpServlet {
 
             try (InputStream fileContent = filePart.getInputStream()) {
                 if (productImageDAO.addProductImage(image, fileContent)) {
-                    response.sendRedirect(request.getContextPath() + "/admin/product-images?productId=" + productId + "&message=Hình ảnh đã được tải lên thành công.");
+                    response.sendRedirect(request.getContextPath() + "/admin/product-images?productId=" + productId + "&message=" + URLEncoder.encode("Hình ảnh đã được tải lên thành công.", StandardCharsets.UTF_8.toString()));
                 } else {
                     request.setAttribute("errorMessage", "Không thể tải lên hình ảnh. Vui lòng thử lại.");
                     listProductImages(request, response);
@@ -196,7 +198,7 @@ public class ProductImageServlet extends HttpServlet {
             UUID productId = UUID.fromString(productIdParam);
 
             if (productImageDAO.deleteProductImage(imageId)) {
-                response.sendRedirect(request.getContextPath() + "/admin/product-images?productId=" + productId + "&message=Hình ảnh đã được xóa thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/product-images?productId=" + productId + "&message=" + URLEncoder.encode("Hình ảnh đã được xóa thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể xóa hình ảnh. Vui lòng thử lại.");
                 listProductImages(request, response);

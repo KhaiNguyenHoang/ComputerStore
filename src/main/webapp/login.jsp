@@ -1,56 +1,126 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Đăng Nhập</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .login-container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); width: 350px; }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; color: #555; }
-        .form-group input[type="text"], .form-group input[type="password"] {
-            width: calc(100% - 20px); padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f8f9fa;
         }
-        .form-group button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-        .form-group button:hover { background-color: #0056b3; }
-        .message { color: red; text-align: center; margin-bottom: 15px; }
-        .success-message { color: green; text-align: center; margin-bottom: 15px; }
-        .register-link, .forgot-password-link { text-align: center; margin-top: 10px; }
-        .register-link a, .forgot-password-link a { color: #007bff; text-decoration: none; }
-        .register-link a:hover, .forgot-password-link a:hover { text-decoration: underline; }
+        .navbar {
+            background-color: #212529 !important;
+        }
+        .navbar-brand, .nav-link {
+            color: #ffffff !important;
+        }
+        .navbar-brand:hover, .nav-link:hover {
+            color: #cccccc !important;
+        }
+        .main-content {
+            min-height: calc(100vh - 150px); /* Adjust based on header/footer height */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px 0;
+        }
+        .login-card {
+            background-color: #fff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            max-width: 450px;
+            width: 100%;
+        }
+        .login-card h2 {
+            text-align: center;
+            color: #343a40;
+            margin-bottom: 30px;
+            font-weight: 700;
+        }
+        .login-card .form-label {
+            font-weight: 500;
+        }
+        .login-card .btn-primary {
+            width: 100%;
+            padding: 10px;
+            font-size: 1.1rem;
+            margin-top: 15px;
+        }
+        .login-card .text-center a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .login-card .text-center a:hover {
+            text-decoration: underline;
+        }
+        .footer {
+            background-color: #212529;
+            color: white;
+            padding: 30px 0;
+            text-align: center;
+            margin-top: 50px;
+        }
+        .footer a {
+            color: #cccccc;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            color: #ffffff;
+        }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <h2>Đăng Nhập</h2>
-        <c:if test="${not empty requestScope.errorMessage}">
-            <p class="message">${requestScope.errorMessage}</p>
-        </c:if>
-        <c:if test="${not empty requestScope.successMessage}">
-            <p class="success-message">${requestScope.successMessage}</p>
-        </c:if>
-        <form action="${pageContext.request.contextPath}/login" method="post">
-            
-            <div class="form-group">
-                <label for="username">Tên đăng nhập:</label>
-                <input type="text" id="username" name="username" required value="${param.username}">
+
+    <jsp:include page="header.jsp" />
+
+    <div class="main-content">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-md-6 col-lg-5">
+                    <div class="login-card">
+                        <h2>Đăng Nhập</h2>
+                        <c:if test="${not empty requestScope.errorMessage}">
+                            <div class="alert alert-danger" role="alert">
+                                ${requestScope.errorMessage}
+                            </div>
+                        </c:if>
+                        <c:if test="${not empty requestScope.successMessage}">
+                            <div class="alert alert-success" role="alert">
+                                ${requestScope.successMessage}
+                            </div>
+                        </c:if>
+                        <form action="${pageContext.request.contextPath}/login" method="post">
+                            <div class="mb-3">
+                                <label for="username" class="form-label">Tên đăng nhập:</label>
+                                <input type="text" class="form-control" id="username" name="username" required value="${param.username}">
+                            </div>
+                            <div class="mb-3">
+                                <label for="password" class="form-label">Mật khẩu:</label>
+                                <input type="password" class="form-control" id="password" name="password" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Đăng Nhập</button>
+                        </form>
+                        <div class="text-center mt-3">
+                            <a href="${pageContext.request.contextPath}/forgot-password">Quên mật khẩu?</a>
+                        </div>
+                        <div class="text-center mt-2">
+                            Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register">Đăng ký ngay</a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="password">Mật khẩu:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <div class="form-group">
-                <button type="submit">Đăng Nhập</button>
-            </div>
-        </form>
-        <div class="forgot-password-link">
-            <a href="${pageContext.request.contextPath}/forgot-password">Quên mật khẩu?</a>
-        </div>
-        <div class="register-link">
-            Chưa có tài khoản? <a href="${pageContext.request.contextPath}/register">Đăng ký ngay</a>
         </div>
     </div>
+
+    <jsp:include page="footer.jsp" />
+
 </body>
 </html>

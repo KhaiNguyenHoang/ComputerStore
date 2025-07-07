@@ -204,7 +204,11 @@ public class AuthServlet extends HttpServlet {
             HttpSession session = request.getSession(true);
             session.setAttribute("user", user);
             logger.info("User logged in: " + username);
-            response.sendRedirect("home.jsp");
+            if ("admin".equalsIgnoreCase(user.getRole())) {
+                response.sendRedirect(request.getContextPath() + "/admin/dashboard");
+            } else {
+                response.sendRedirect(request.getContextPath() + "/home");
+            }
         } catch (SQLException e) {
             logger.warning("Login failed for: " + username + " - " + e.getMessage());
             if (e.getMessage().equals("Email not verified")) {

@@ -37,10 +37,11 @@ public class OrderDAO extends DBContext {
         Order order = null;
         try {
             connection.setAutoCommit(false); // Bắt đầu transaction
+            LOGGER.info("OrderDAO: Transaction started for user {}.", userId);
 
             List<ShoppingCart> cartItems = shoppingCartDAO.getCartItemsByUserId(userId);
             if (cartItems.isEmpty()) {
-                LOGGER.warn("Cannot create order: Cart is empty for user {}.", userId);
+                LOGGER.warn("OrderDAO: Cannot create order: Cart is empty for user {}.", userId);
                 connection.rollback();
                 return null;
             }
@@ -56,6 +57,7 @@ public class OrderDAO extends DBContext {
                 }
                 subtotalAmount = subtotalAmount.add(product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
             }
+            LOGGER.info("OrderDAO: Calculated subtotal amount {} for user {}.", subtotalAmount, userId);
 
             // Tạo Order mới
             UUID orderId = UUID.randomUUID();
@@ -85,6 +87,7 @@ public class OrderDAO extends DBContext {
                 stmt.setTimestamp(17, java.sql.Timestamp.valueOf(LocalDateTime.now()));
                 stmt.executeUpdate();
             }
+            LOGGER.info("OrderDAO: Order record inserted for order ID {}.", orderId);
 
             // Thêm OrderItems và cập nhật số lượng tồn kho
             String insertOrderItemSql = "INSERT INTO OrderItems (OrderItemID, OrderID, ProductID, ProductName, SKU, Quantity, UnitPrice, TotalPrice) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
@@ -93,6 +96,7 @@ public class OrderDAO extends DBContext {
             for (ShoppingCart item : cartItems) {
                 Product product = productDAO.getProductById(item.getProductID());
                 UUID orderItemId = UUID.randomUUID();
+                LOGGER.info("OrderDAO: Processing cart item for product ID {} (quantity {}).", item.getProductID(), item.getQuantity());
                 try (PreparedStatement itemStmt = connection.prepareStatement(insertOrderItemSql)) {
                     itemStmt.setString(1, orderItemId.toString());
                     itemStmt.setString(2, orderId.toString());
@@ -104,6 +108,7 @@ public class OrderDAO extends DBContext {
                     itemStmt.setBigDecimal(8, product.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())));
                     itemStmt.executeUpdate();
                 }
+                LOGGER.info("OrderDAO: Order item inserted for product ID {}.", item.getProductID());
 
                 try (PreparedStatement stockStmt = connection.prepareStatement(updateProductStockSql)) {
                     stockStmt.setInt(1, item.getQuantity());
@@ -111,6 +116,7 @@ public class OrderDAO extends DBContext {
                     stockStmt.setString(3, item.getProductID().toString());
                     stockStmt.executeUpdate();
                 }
+                LOGGER.info("OrderDAO: Product stock updated for product ID {}.", item.getProductID());
 
                 // Ghi lại giao dịch tồn kho (loại 'out')
                 InventoryTransaction invTransaction = new InventoryTransaction();
@@ -121,14 +127,16 @@ public class OrderDAO extends DBContext {
                 invTransaction.setReferenceID(orderId);
                 invTransaction.setNotes("Order placed: " + orderNumber);
                 invTransaction.setCreatedBy(userId); // Người dùng đặt hàng là người tạo giao dịch
-                inventoryTransactionDAO.addTransaction(invTransaction);
+                inventoryTransactionDAO.addTransaction(invTransaction, connection);
+                LOGGER.info("OrderDAO: Inventory transaction added for product ID {}.", item.getProductID());
             }
 
             // Xóa giỏ hàng sau khi tạo đơn hàng thành công
             shoppingCartDAO.clearCart(userId);
+            LOGGER.info("OrderDAO: Shopping cart cleared for user {}.", userId);
 
             connection.commit(); // Commit transaction
-            LOGGER.info("Order {} created successfully for user {}.", orderId, userId);
+            LOGGER.info("OrderDAO: Transaction committed for order {}.", orderId);
 
             // Lấy lại đối tượng Order đầy đủ để trả về
             order = getOrderById(orderId);
@@ -168,10 +176,18 @@ public class OrderDAO extends DBContext {
                 if (rs.next()) {
                     order = mapResultSetToOrder(rs);
                     // Lấy OrderItems
-                    order.setOrderItems(getOrderItemsByOrderId(order.getOrderID()));
+                    List<OrderItem> orderItems = getOrderItemsByOrderId(order.getOrderID());
+                    order.setOrderItems(orderItems);
+                    LOGGER.info("Retrieved {} order items for order ID {}.", orderItems.size(), order.getOrderID());
+
                     // Lấy địa chỉ giao hàng và thanh toán
-                    order.setShippingAddress(userAddressDAO.getAddressById(order.getShippingAddressID()));
-                    order.setBillingAddress(userAddressDAO.getAddressById(order.getBillingAddressID()));
+                    UserAddress shippingAddress = userAddressDAO.getAddressById(order.getShippingAddressID());
+                    order.setShippingAddress(shippingAddress);
+                    LOGGER.info("Retrieved shipping address for order ID {}: {}.", order.getOrderID(), shippingAddress != null ? shippingAddress.getAddressID() : "null");
+
+                    UserAddress billingAddress = userAddressDAO.getAddressById(order.getBillingAddressID());
+                    order.setBillingAddress(billingAddress);
+                    LOGGER.info("Retrieved billing address for order ID {}: {}.", order.getOrderID(), billingAddress != null ? billingAddress.getAddressID() : "null");
                 }
             }
         } catch (SQLException e) {
@@ -258,7 +274,11 @@ public class OrderDAO extends DBContext {
         order.setShippingTrackingNumber(rs.getString("ShippingTrackingNumber"));
         order.setShippingCarrier(rs.getString("ShippingCarrier"));
         order.setNotes(rs.getString("Notes"));
-        order.setOrderDate(rs.getTimestamp("OrderDate").toLocalDateTime());
+        if (rs.getTimestamp("OrderDate") != null) {
+            order.setOrderDate(rs.getTimestamp("OrderDate").toLocalDateTime());
+        } else {
+            order.setOrderDate(null);
+        }
         if (rs.getTimestamp("ShippedDate") != null) {
             order.setShippedDate(rs.getTimestamp("ShippedDate").toLocalDateTime());
         }

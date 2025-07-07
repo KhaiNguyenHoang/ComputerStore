@@ -84,6 +84,9 @@ public class ShoppingCartServlet extends HttpServlet {
 
     private void displayCart(HttpServletRequest request, HttpServletResponse response, UUID userId) throws ServletException, IOException {
         List<ShoppingCart> cartItems = shoppingCartDAO.getCartItemsByUserId(userId);
+        if (cartItems.isEmpty()) {
+            request.setAttribute("cartEmpty", true);
+        }
         request.setAttribute("cartItems", cartItems);
         request.getRequestDispatcher("/cart.jsp").forward(request, response);
     }

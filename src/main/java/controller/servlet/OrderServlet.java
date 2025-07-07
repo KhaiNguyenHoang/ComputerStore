@@ -255,10 +255,12 @@ public class OrderServlet extends HttpServlet {
             // Khai báo newOrder ở đây
             Order newOrder = null;
 
-            // Gửi yêu cầu thanh toán đến cổng thanh toán mô phỏng
+            LOGGER.info("Calling sendPaymentRequest for user: " + userId);
             String paymentResult = sendPaymentRequest(UUID.randomUUID().toString(), finalTotalAmount, paymentMethod, request.getParameter("cardNumber"), request.getParameter("expiryDate"), request.getParameter("cvv"));
+            LOGGER.info("Payment request returned with result: " + paymentResult + " for user: " + userId);
 
             if ("SUCCESS".equals(paymentResult)) {
+                LOGGER.info("Payment successful. Proceeding to create order for user: " + userId);
                 newOrder = orderDAO.createOrder(userId, shippingAddressId, billingAddressId, paymentMethod, notes);
 
                 if (newOrder != null) {
@@ -274,13 +276,18 @@ public class OrderServlet extends HttpServlet {
                     request.getSession().removeAttribute("appliedCouponCode");
                     request.getSession().removeAttribute("discountAmount");
 
+                    // Xóa giỏ hàng sau khi đặt hàng thành công
+                    shoppingCartDAO.clearCart(userId);
+
                     LOGGER.info("Order placed successfully: " + newOrder.getOrderID());
-                    response.sendRedirect(request.getContextPath() + "/orders/detail?id=" + newOrder.getOrderID() + "&message=Đơn hàng của bạn đã được đặt thành công!");
+                    response.sendRedirect(request.getContextPath() + "/orders/detail?id=" + newOrder.getOrderID() + "&message=" + URLEncoder.encode("Đơn hàng của bạn đã được đặt thành công!", StandardCharsets.UTF_8.toString()));
                 } else {
-                    request.setAttribute("errorMessage", "Không thể đặt đơn hàng. Vui lòng kiểm tra lại giỏ hàng và số lượng sản phẩm.");
-                    displayCheckout(request, response, userId);
+                    LOGGER.severe("Order creation returned null for user: " + userId);
+                    request.setAttribute("errorMessage", "Không thể đặt đơn hàng. Vui lòng kiểm tra lại giỏ hàng và số lượng sản phẩm hoặc liên hệ hỗ trợ.");
+                    request.getRequestDispatcher("/error.jsp").forward(request, response); // Redirect to generic error page
                 }
             } else {
+                LOGGER.warning("Payment failed for user: " + userId + ". Payment result: " + paymentResult);
                 request.setAttribute("errorMessage", "Thanh toán thất bại. Vui lòng thử lại hoặc chọn phương thức thanh toán khác.");
                 displayCheckout(request, response, userId);
             }
@@ -288,34 +295,24 @@ public class OrderServlet extends HttpServlet {
             LOGGER.warning("Invalid UUID format for address IDs: " + e.getMessage());
             request.setAttribute("errorMessage", "Định dạng ID địa chỉ không hợp lệ.");
             displayCheckout(request, response, userId);
+        } catch (Exception e) {
+            LOGGER.severe("Unexpected error during order placement for user " + userId + ": " + e.getMessage());
+            request.setAttribute("errorMessage", "Đã xảy ra lỗi không mong muốn khi đặt hàng. Vui lòng thử lại.");
+            request.getRequestDispatcher("/error.jsp").forward(request, response); // Redirect to generic error page
         }
     }
 
     private String sendPaymentRequest(String orderId, BigDecimal totalAmount, String paymentMethod, String cardNumber, String expiryDate, String cvv) throws IOException {
-        // Mô phỏng gửi request đến cổng thanh toán
-        // Trong thực tế, bạn sẽ dùng HttpClient để gửi POST request đến PaymentGatewayServlet
-        // hoặc API của cổng thanh toán thật.
-        // Ở đây, tôi sẽ gọi trực tiếp doPost của PaymentGatewayServlet để mô phỏng.
+        LOGGER.info("Initiating payment request for orderId: " + orderId);
+        // In a real application, you would use an HTTP client to send a request to the payment gateway.
+        // For this simulation, we'll directly call a static method on the PaymentGatewayServlet.
+        boolean paymentSuccess = PaymentGatewayServlet.simulatePaymentProcessing();
 
-        // Tạo một HttpServletRequest và HttpServletResponse giả để gọi doPost
-        // Đây là cách đơn giản để mô phỏng, không phải là cách tốt nhất trong môi trường production
-        // Trong production, bạn sẽ cần một thư viện HTTP client (ví dụ: Apache HttpClient, OkHttp)
-        // để gửi request HTTP thực sự đến URL của PaymentGatewayServlet.
-
-        // Giả lập kết quả từ cổng thanh toán
-        // Để đơn giản, tôi sẽ gọi trực tiếp phương thức simulatePaymentProcessing từ PaymentGatewayServlet
-        // Đây là một cách làm không chuẩn trong thực tế, chỉ để minh họa luồng.
-        PaymentGatewayServlet paymentGateway = new PaymentGatewayServlet();
-        // Để gọi simulatePaymentProcessing, chúng ta cần một instance của PaymentGatewayServlet
-        // và phương thức đó phải là public hoặc có thể truy cập được.
-        // Hiện tại, simulatePaymentProcessing là private. Tôi sẽ thay đổi nó thành public static
-        // hoặc tạo một instance mới của PaymentGatewayServlet và gọi nó.
-        // Cách tốt nhất là làm cho nó là một phương thức static trong PaymentGatewayServlet
-        // hoặc tạo một lớp service riêng cho việc này.
-        // Tạm thời, tôi sẽ tạo một instance mới và gọi nó.
-        if (paymentGateway.simulatePaymentProcessing()) { // Gọi phương thức mô phỏng
+        if (paymentSuccess) {
+            LOGGER.info("Payment successful for orderId: " + orderId);
             return "SUCCESS";
         } else {
+            LOGGER.warning("Payment failed for orderId: " + orderId);
             return "FAILED";
         }
     }
@@ -328,27 +325,43 @@ public class OrderServlet extends HttpServlet {
 
     private void displayOrderDetail(HttpServletRequest request, HttpServletResponse response, UUID userId) throws ServletException, IOException {
         String orderIdParam = request.getParameter("id");
+        LOGGER.info("Attempting to display order detail for orderId: " + orderIdParam + " for user: " + userId);
+
         if (orderIdParam == null || orderIdParam.trim().isEmpty()) {
             request.setAttribute("errorMessage", "ID đơn hàng không được cung cấp.");
             request.getRequestDispatcher("/error.jsp").forward(request, response);
+            LOGGER.warning("Order ID not provided for displayOrderDetail.");
             return;
         }
 
         try {
             UUID orderId = UUID.fromString(orderIdParam);
+            LOGGER.info("Parsed orderId UUID: " + orderId);
             Order order = orderDAO.getOrderById(orderId);
+            LOGGER.info("Retrieved order from DAO. Order is null: " + (order == null));
 
             if (order == null || !order.getUserID().equals(userId)) {
                 request.setAttribute("errorMessage", "Đơn hàng không tìm thấy hoặc bạn không có quyền truy cập.");
                 request.getRequestDispatcher("/error.jsp").forward(request, response);
+                LOGGER.warning("Order not found or unauthorized access for orderId: " + orderId + " by user: " + userId);
                 return;
             }
 
+            if (order.getOrderDate() != null) {
+                request.setAttribute("orderDate", java.util.Date.from(order.getOrderDate().atZone(java.time.ZoneId.systemDefault()).toInstant()));
+                LOGGER.info("Converted orderDate to java.util.Date and set attribute.");
+            }
+
             request.setAttribute("order", order);
+            LOGGER.info("Set 'order' attribute in request. Forwarding to order-detail.jsp.");
             request.getRequestDispatcher("/order-detail.jsp").forward(request, response);
         } catch (IllegalArgumentException e) {
             LOGGER.warning("Invalid order ID format: " + orderIdParam + " - " + e.getMessage());
             request.setAttribute("errorMessage", "Định dạng ID đơn hàng không hợp lệ.");
+            request.getRequestDispatcher("/error.jsp").forward(request, response);
+        } catch (Exception e) {
+            LOGGER.severe("Unexpected error in displayOrderDetail for orderId " + orderIdParam + ": " + e.getMessage());
+            request.setAttribute("errorMessage", "Đã xảy ra lỗi không mong muốn khi hiển thị chi tiết đơn hàng.");
             request.getRequestDispatcher("/error.jsp").forward(request, response);
         }
     }

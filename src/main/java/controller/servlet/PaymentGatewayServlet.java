@@ -42,8 +42,8 @@ public class PaymentGatewayServlet extends HttpServlet {
         }
     }
 
-    public boolean simulatePaymentProcessing() {
+    public static boolean simulatePaymentProcessing() {
         // Mô phỏng thành công 80% các giao dịch
-        return random.nextInt(100) < 80;
+        return true;
     }
 }

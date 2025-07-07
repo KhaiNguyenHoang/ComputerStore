@@ -10,7 +10,11 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import util.DBContext;
+
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
@@ -25,7 +29,13 @@ public class AdminProductReviewServlet extends HttpServlet {
     @Override
     public void init() throws ServletException {
         super.init();
-        productReviewDAO = new ProductReviewDAO();
+        try {
+            productReviewDAO = new ProductReviewDAO(new DBContext().getConnection());
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -131,7 +141,8 @@ public class AdminProductReviewServlet extends HttpServlet {
         try {
             UUID reviewId = UUID.fromString(reviewIdParam);
             if (productReviewDAO.togglePublishStatus(reviewId)) {
-                response.sendRedirect(request.getContextPath() + "/admin/reviews?message=Trạng thái đánh giá đã được cập nhật.");
+                String encodedMessage = URLEncoder.encode("Trạng thái đánh giá đã được cập nhật.", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/admin/reviews?message=" + encodedMessage);
             } else {
                 request.setAttribute("errorMessage", "Không thể cập nhật trạng thái đánh giá. Vui lòng thử lại.");
                 listReviews(request, response);
@@ -154,7 +165,8 @@ public class AdminProductReviewServlet extends HttpServlet {
         try {
             UUID reviewId = UUID.fromString(reviewIdParam);
             if (productReviewDAO.deleteReview(reviewId)) {
-                response.sendRedirect(request.getContextPath() + "/admin/reviews?message=Đánh giá đã được xóa thành công.");
+                String encodedMessage = URLEncoder.encode("Đánh giá đã được xóa thành công.", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/admin/reviews?message=" + encodedMessage);
             } else {
                 request.setAttribute("errorMessage", "Không thể xóa đánh giá. Vui lòng thử lại.");
                 listReviews(request, response);

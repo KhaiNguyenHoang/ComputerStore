@@ -140,4 +140,13 @@ public class ProductReview {
     public void setUser(User user) {
         this.user = user;
     }
+
+    // Helper methods for JSP to format LocalDateTime as java.util.Date
+    public java.util.Date getCreatedDateAsDate() {
+        return createdDate != null ? java.sql.Timestamp.valueOf(createdDate) : null;
+    }
+
+    public java.util.Date getModifiedDateAsDate() {
+        return modifiedDate != null ? java.sql.Timestamp.valueOf(modifiedDate) : null;
+    }
 }

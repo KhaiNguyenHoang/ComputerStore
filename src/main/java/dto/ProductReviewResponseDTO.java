@@ -15,6 +15,7 @@ public class ProductReviewResponseDTO {
     private String title;
     private String reviewText;
     private boolean isVerifiedPurchase;
+    private boolean published; // Add this field
     private int helpfulCount;
     private LocalDateTime createdDate;
 
@@ -48,6 +49,9 @@ public class ProductReviewResponseDTO {
     public int getHelpfulCount() { return helpfulCount; }
     public void setHelpfulCount(int helpfulCount) { this.helpfulCount = helpfulCount; }
 
+    public boolean isPublished() { return published; }
+    public void setPublished(boolean published) { this.published = published; }
+
     public LocalDateTime getCreatedDate() { return createdDate; }
     public void setCreatedDate(LocalDateTime createdDate) { this.createdDate = createdDate; }
 
@@ -59,4 +63,12 @@ public class ProductReviewResponseDTO {
 
     public String getUserFullName() { return userFullName; }
     public void setUserFullName(String userFullName) { this.userFullName = userFullName; }
+
+    // Helper method for JSP to format LocalDateTime
+    public java.util.Date getCreatedDateAsDate() {
+        if (this.createdDate == null) {
+            return null;
+        }
+        return java.util.Date.from(this.createdDate.atZone(java.time.ZoneId.systemDefault()).toInstant());
+    }
 }

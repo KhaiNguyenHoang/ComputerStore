@@ -38,7 +38,7 @@ public class UserAddressDAO extends DBContext {
             stmt.setString(7, address.getState());
             stmt.setString(8, address.getPostalCode());
             stmt.setString(9, address.getCountry());
-            stmt.setBoolean(10, address.isDefault());
+            stmt.setBoolean(10, address.getIsDefault());
             stmt.setTimestamp(11, java.sql.Timestamp.valueOf(LocalDateTime.now()));
 
             int rowsAffected = stmt.executeUpdate();
@@ -66,7 +66,7 @@ public class UserAddressDAO extends DBContext {
             stmt.setString(5, address.getState());
             stmt.setString(6, address.getPostalCode());
             stmt.setString(7, address.getCountry());
-            stmt.setBoolean(8, address.isDefault());
+            stmt.setBoolean(8, address.getIsDefault());
             stmt.setString(9, address.getAddressID().toString());
             stmt.setString(10, address.getUserID().toString());
 

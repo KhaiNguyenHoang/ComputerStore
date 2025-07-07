@@ -16,6 +16,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -160,7 +162,7 @@ public class AdminProductServlet extends HttpServlet {
         }
 
         if (productDAO.addProduct(product)) {
-            response.sendRedirect(request.getContextPath() + "/admin/products?message=Sản phẩm đã được thêm thành công.");
+            response.sendRedirect(request.getContextPath() + "/admin/products?message=" + URLEncoder.encode("Sản phẩm đã được thêm thành công.", StandardCharsets.UTF_8.toString()));
         } else {
             request.setAttribute("errorMessage", "Không thể thêm sản phẩm. Vui lòng kiểm tra SKU hoặc các thông tin khác.");
             request.setAttribute("product", product); // Giữ lại dữ liệu đã nhập
@@ -187,7 +189,7 @@ public class AdminProductServlet extends HttpServlet {
             product.setProductID(productId); // Đảm bảo ID được giữ nguyên
 
             if (productDAO.updateProduct(product)) {
-                response.sendRedirect(request.getContextPath() + "/admin/products?message=Sản phẩm đã được cập nhật thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/products?message=" + URLEncoder.encode("Sản phẩm đã được cập nhật thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể cập nhật sản phẩm. Vui lòng thử lại.");
                 request.setAttribute("product", product); // Giữ lại dữ liệu đã nhập
@@ -211,7 +213,7 @@ public class AdminProductServlet extends HttpServlet {
         try {
             UUID productId = UUID.fromString(productIdParam);
             if (productDAO.deleteProduct(productId)) {
-                response.sendRedirect(request.getContextPath() + "/admin/products?message=Sản phẩm đã được xóa thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/products?message=" + URLEncoder.encode("Sản phẩm đã được xóa thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể xóa sản phẩm. Vui lòng thử lại.");
                 listProducts(request, response);

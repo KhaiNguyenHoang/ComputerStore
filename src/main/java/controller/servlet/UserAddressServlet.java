@@ -11,6 +11,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
@@ -127,7 +129,8 @@ public class UserAddressServlet extends HttpServlet {
 
         boolean success = userAddressDAO.addAddress(newAddress);
         if (success) {
-            response.sendRedirect(request.getContextPath() + "/profile/addresses?message=Địa chỉ đã được thêm thành công.");
+            String message = URLEncoder.encode("Địa chỉ đã được thêm thành công.", StandardCharsets.UTF_8.toString());
+            response.sendRedirect(request.getContextPath() + "/profile/addresses?message=" + message);
         } else {
             request.setAttribute("errorMessage", "Không thể thêm địa chỉ. Vui lòng thử lại.");
             request.setAttribute("address", newAddress); // Giữ lại dữ liệu đã nhập
@@ -158,7 +161,8 @@ public class UserAddressServlet extends HttpServlet {
 
             boolean success = userAddressDAO.updateAddress(updatedAddress);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/profile/addresses?message=Địa chỉ đã được cập nhật thành công.");
+                String message = URLEncoder.encode("Địa chỉ đã được cập nhật thành công.", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/profile/addresses?message=" + message);
             } else {
                 request.setAttribute("errorMessage", "Không thể cập nhật địa chỉ. Vui lòng thử lại.");
                 request.setAttribute("address", updatedAddress); // Giữ lại dữ liệu đã nhập
@@ -183,7 +187,8 @@ public class UserAddressServlet extends HttpServlet {
             UUID addressId = UUID.fromString(addressIdParam);
             boolean success = userAddressDAO.deleteAddress(addressId, userId);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/profile/addresses?message=Địa chỉ đã được xóa thành công.");
+                String message = URLEncoder.encode("Địa chỉ đã được xóa thành công.", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/profile/addresses?message=" + message);
             } else {
                 request.setAttribute("errorMessage", "Không thể xóa địa chỉ. Vui lòng thử lại.");
                 request.getRequestDispatcher("/error.jsp").forward(request, response);
@@ -207,7 +212,8 @@ public class UserAddressServlet extends HttpServlet {
             UUID addressId = UUID.fromString(addressIdParam);
             boolean success = userAddressDAO.setDefaultAddress(addressId, userId);
             if (success) {
-                response.sendRedirect(request.getContextPath() + "/profile/addresses?message=Địa chỉ mặc định đã được cập nhật.");
+                String message = URLEncoder.encode("Địa chỉ mặc định đã được cập nhật.", StandardCharsets.UTF_8.toString());
+                response.sendRedirect(request.getContextPath() + "/profile/addresses?message=" + message);
             } else {
                 request.setAttribute("errorMessage", "Không thể đặt địa chỉ mặc định. Vui lòng thử lại.");
                 request.getRequestDispatcher("/error.jsp").forward(request, response);

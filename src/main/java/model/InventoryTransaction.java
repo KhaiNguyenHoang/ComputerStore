@@ -120,4 +120,9 @@ public class InventoryTransaction {
     public void setCreatedByUser(User createdByUser) {
         this.createdByUser = createdByUser;
     }
+
+    // Helper method for JSP to format LocalDateTime as java.util.Date
+    public java.util.Date getCreatedDateAsDate() {
+        return createdDate != null ? java.sql.Timestamp.valueOf(createdDate) : null;
+    }
 }

@@ -12,6 +12,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -128,7 +130,7 @@ public class AdminCouponServlet extends HttpServlet {
         }
 
         if (couponDAO.addCoupon(coupon)) {
-            response.sendRedirect(request.getContextPath() + "/admin/coupons?message=Mã giảm giá đã được thêm thành công.");
+            response.sendRedirect(request.getContextPath() + "/admin/coupons?message=" + URLEncoder.encode("Mã giảm giá đã được thêm thành công.", StandardCharsets.UTF_8.toString()));
         } else {
             request.setAttribute("errorMessage", "Không thể thêm mã giảm giá. Vui lòng kiểm tra mã code hoặc các thông tin khác.");
             request.setAttribute("coupon", coupon); // Giữ lại dữ liệu đã nhập
@@ -155,7 +157,7 @@ public class AdminCouponServlet extends HttpServlet {
             coupon.setCouponID(couponId); // Đảm bảo ID được giữ nguyên
 
             if (couponDAO.updateCoupon(coupon)) {
-                response.sendRedirect(request.getContextPath() + "/admin/coupons?message=Mã giảm giá đã được cập nhật thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/coupons?message=" + URLEncoder.encode("Mã giảm giá đã được cập nhật thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể cập nhật mã giảm giá. Vui lòng thử lại.");
                 request.setAttribute("coupon", coupon); // Giữ lại dữ liệu đã nhập
@@ -179,7 +181,7 @@ public class AdminCouponServlet extends HttpServlet {
         try {
             UUID couponId = UUID.fromString(couponIdParam);
             if (couponDAO.deleteCoupon(couponId)) {
-                response.sendRedirect(request.getContextPath() + "/admin/coupons?message=Mã giảm giá đã được xóa thành công.");
+                response.sendRedirect(request.getContextPath() + "/admin/coupons?message=" + URLEncoder.encode("Mã giảm giá đã được xóa thành công.", StandardCharsets.UTF_8.toString()));
             } else {
                 request.setAttribute("errorMessage", "Không thể xóa mã giảm giá. Vui lòng thử lại.");
                 listCoupons(request, response);

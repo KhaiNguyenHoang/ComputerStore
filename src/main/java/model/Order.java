@@ -282,4 +282,21 @@ public class Order {
     public void setCouponUsages(List<UserCouponUsage> couponUsages) {
         this.couponUsages = couponUsages;
     }
+
+    // Helper methods for JSP to format LocalDateTime as java.util.Date
+    public java.util.Date getOrderDateAsDate() {
+        return orderDate != null ? java.sql.Timestamp.valueOf(orderDate) : null;
+    }
+
+    public java.util.Date getShippedDateAsDate() {
+        return shippedDate != null ? java.sql.Timestamp.valueOf(shippedDate) : null;
+    }
+
+    public java.util.Date getDeliveredDateAsDate() {
+        return deliveredDate != null ? java.sql.Timestamp.valueOf(deliveredDate) : null;
+    }
+
+    public java.util.Date getModifiedDateAsDate() {
+        return modifiedDate != null ? java.sql.Timestamp.valueOf(modifiedDate) : null;
+    }
 }

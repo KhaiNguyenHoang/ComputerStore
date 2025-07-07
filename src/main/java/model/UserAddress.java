@@ -111,7 +111,7 @@ public class UserAddress {
         this.country = country;
     }
 
-    public boolean isDefault() {
+    public boolean getIsDefault() {
         return isDefault;
     }
 

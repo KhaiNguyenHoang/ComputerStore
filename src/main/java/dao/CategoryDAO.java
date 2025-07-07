@@ -70,32 +70,35 @@ public class CategoryDAO extends DBContext {
      * @return UUID của danh mục vừa được tạo, hoặc null nếu thất bại.
      */
     public UUID addCategory(Category category) throws SQLException {
-        String sql = "INSERT INTO Categories (CategoryName, Description, ParentCategoryID, IsActive, ModifiedDate) " +
-                "OUTPUT INSERTED.CategoryID " +
-                "VALUES (?, ?, ?, ?, GETDATE())";
+        UUID newCategoryId = UUID.randomUUID();
+        category.setCategoryID(newCategoryId); // Set the generated ID to the category object
+
+        String sql = "INSERT INTO Categories (CategoryID, CategoryName, Description, ParentCategoryID, IsActive, CreatedDate, ModifiedDate) " +
+                "VALUES (?, ?, ?, ?, ?, GETDATE(), GETDATE())";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, category.getCategoryName());
-            stmt.setString(2, category.getDescription());
+            stmt.setString(1, category.getCategoryID().toString());
+            stmt.setString(2, category.getCategoryName());
+            stmt.setString(3, category.getDescription());
             if (category.getParentCategoryID() != null) {
-                stmt.setString(3, category.getParentCategoryID().toString());
+                stmt.setString(4, category.getParentCategoryID().toString());
             } else {
-                stmt.setObject(3, null);
+                stmt.setObject(4, null);
             }
-            stmt.setBoolean(4, category.isActive());
+            stmt.setBoolean(5, category.isActive());
 
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    UUID newId = UUID.fromString(rs.getString(1));
-                    LOGGER.info("Successfully added category '{}' with new ID: {}", category.getCategoryName(), newId);
-                    return newId;
-                }
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                LOGGER.info("Successfully added category '{}' with new ID: {}", category.getCategoryName(), newCategoryId);
+                return newCategoryId;
+            } else {
+                LOGGER.warn("Failed to add category '{}'. No rows affected.", category.getCategoryName());
+                return null;
             }
         } catch (SQLException e) {
             LOGGER.error("Failed to add category '{}': {}", category.getCategoryName(), e.getMessage(), e);
             throw e;
         }
-        return null;
     }
 
     /**

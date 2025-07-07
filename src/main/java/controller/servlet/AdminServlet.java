@@ -11,7 +11,7 @@ import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.util.logging.Logger;
 
-@WebServlet(urlPatterns = {"/admin", "/admin/dashboard"})
+@WebServlet(urlPatterns = {"/admin"})
 public class AdminServlet extends HttpServlet {
 
     private static final Logger LOGGER = Logger.getLogger(AdminServlet.class.getName());

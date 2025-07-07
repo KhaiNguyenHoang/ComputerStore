@@ -13,9 +13,15 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        html, body {
+            height: 100%;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .navbar {
             background-color: #212529 !important;
@@ -26,12 +32,21 @@
         .navbar-brand:hover, .nav-link:hover {
             color: #cccccc !important;
         }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            margin: 0 auto; /* Center the container horizontally */
+        }
         .footer {
             background-color: #212529;
             color: white;
             padding: 30px 0;
             text-align: center;
-            margin-top: 50px;
+            margin-top: auto; /* Push footer to the bottom */
         }
         .footer a {
             color: #cccccc;
@@ -76,7 +91,8 @@
 
     <jsp:include page="header.jsp" />
 
-    <div class="container mt-4 mb-5">
+    <div class="main-content">
+        <div class="container mt-4 mb-5">
         <c:if test="${not empty requestScope.order}">
             <h1 class="text-center mb-4">Chi tiết Đơn hàng #${requestScope.order.orderNumber}</h1>
 

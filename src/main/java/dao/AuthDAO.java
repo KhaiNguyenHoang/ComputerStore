@@ -331,13 +331,14 @@ public class AuthDAO extends DBContext {
 
                 UUID token = UUID.randomUUID();
                 LocalDateTime expiryDate = LocalDateTime.now().plusHours(1);
-                String tokenSql = "INSERT INTO EmailVerificationTokens (UserID, Token, TokenType, ExpiryDate) VALUES (?, ?, ?, ?)";
+                String tokenSql = "INSERT INTO EmailVerificationTokens (TokenID, UserID, Token, TokenType, ExpiryDate) VALUES (?, ?, ?, ?, ?)";
                 try (Connection conn = getConnection();
                      PreparedStatement tokenStmt = conn.prepareStatement(tokenSql)) {
-                    tokenStmt.setString(1, userId.toString());
-                    tokenStmt.setString(2, token.toString());
-                    tokenStmt.setString(3, "PASSWORD_RESET");
-                    tokenStmt.setTimestamp(4, Timestamp.valueOf(expiryDate));
+                    tokenStmt.setString(1, token.toString()); // Set TokenID
+                    tokenStmt.setString(2, userId.toString());
+                    tokenStmt.setString(3, token.toString());
+                    tokenStmt.setString(4, "PASSWORD_RESET");
+                    tokenStmt.setTimestamp(5, Timestamp.valueOf(expiryDate));
                     tokenStmt.executeUpdate();
                 }
 

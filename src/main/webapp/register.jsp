@@ -11,9 +11,15 @@
     <!-- Font Awesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        html, body {
+            height: 100%;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
         }
         .navbar {
             background-color: #212529 !important;
@@ -25,11 +31,10 @@
             color: #cccccc !important;
         }
         .main-content {
-            min-height: calc(100vh - 150px); /* Adjust based on header/footer height */
+            flex-grow: 1;
             display: flex;
             justify-content: center;
             align-items: center;
-            padding: 50px 0;
         }
         .register-card {
             background-color: #fff;
@@ -66,7 +71,7 @@
             color: white;
             padding: 30px 0;
             text-align: center;
-            margin-top: 50px;
+            margin-top: auto;
         }
         .footer a {
             color: #cccccc;
@@ -79,7 +84,7 @@
 </head>
 <body>
 
-    <jsp:include page="header.jsp" />
+    
 
     <div class="main-content">
         <div class="container">
@@ -148,11 +153,12 @@
                         </div>
                     </div>
                 </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <jsp:include page="footer.jsp" />
+    
 
 </body>
 </html>

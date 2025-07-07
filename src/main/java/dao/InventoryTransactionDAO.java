@@ -101,6 +101,24 @@ public class InventoryTransactionDAO {
         return transactions;
     }
 
+    /**
+     * Lấy tổng số giao dịch tồn kho.
+     * @return Tổng số giao dịch tồn kho.
+     */
+    public int getTotalInventoryTransactionCount() {
+        String sql = "SELECT COUNT(*) FROM InventoryTransactions";
+        try (Connection connection = new DBContext().getConnection();
+             PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            LOGGER.error("Error getting total inventory transaction count: {}", e.getMessage(), e);
+        }
+        return 0;
+    }
+
     private InventoryTransaction mapResultSetToInventoryTransaction(ResultSet rs) throws SQLException {
         InventoryTransaction transaction = new InventoryTransaction();
         transaction.setTransactionID(UUID.fromString(rs.getString("TransactionID")));

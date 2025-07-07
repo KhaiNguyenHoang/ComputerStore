@@ -263,9 +263,11 @@ public class ProductDAO extends DBContext {
                     }
                 }
             }
-        } catch (SQLException | ClassNotFoundException e) {
+        } catch (SQLException e) {
             System.err.println("Error fetching product by ID: " + e.getMessage());
             e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
         return product;
     }
@@ -389,130 +391,22 @@ public class ProductDAO extends DBContext {
     }
 
     /**
-     * Tìm kiếm và lọc sản phẩm dựa trên từ khóa, danh mục và thương hiệu.
-     * @param searchTerm Từ khóa tìm kiếm (tên sản phẩm, mô tả, SKU).
-     * @param categoryId ID của danh mục để lọc.
-     * @param brandId ID của thương hiệu để lọc.
-     * @param pageNumber Số trang (bắt đầu từ 1).
-     * @param pageSize Kích thước trang.
-     * @param sortBy Trường để sắp xếp (ProductName, Price, CreatedDate, v.v.).
-     * @param sortOrder Thứ tự sắp xếp (asc, desc).
-     * @return Danh sách các đối tượng Product phù hợp.
+     * Lấy tổng số sản phẩm.
+     * @return Tổng số sản phẩm.
      */
-    public List<Product> searchAndFilterProducts(String searchTerm, UUID categoryId, UUID brandId, int pageNumber, int pageSize, String sortBy, String sortOrder) {
-        List<Product> products = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT p.ProductID, p.ProductName, p.SKU, p.CategoryID, p.BrandID, p.Description, p.ShortDescription, " +
-                "p.Price, p.ComparePrice, p.CostPrice, p.Weight, p.Dimensions, p.StockQuantity, p.MinStockLevel, p.MaxStockLevel, " +
-                "p.IsActive, p.IsFeatured, p.ViewCount, p.SalesCount, p.AverageRating, p.ReviewCount, p.CreatedDate, p.ModifiedDate, " +
-                "c.CategoryName, b.BrandName " +
-                "FROM Products p " +
-                "LEFT JOIN Categories c ON p.CategoryID = c.CategoryID " +
-                "LEFT JOIN Brands b ON p.BrandID = b.BrandID " +
-                "WHERE p.IsActive = 1");
-
-        List<Object> params = new ArrayList<>();
-
-        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
-            sql.append(" AND (p.ProductName LIKE ? OR p.Description LIKE ? OR p.SKU LIKE ?)");
-            String likeTerm = "%" + searchTerm.trim() + "%";
-            params.add(likeTerm);
-            params.add(likeTerm);
-            params.add(likeTerm);
-        }
-
-        if (categoryId != null) {
-            sql.append(" AND p.CategoryID = ?");
-            params.add(categoryId.toString());
-        }
-
-        if (brandId != null) {
-            sql.append(" AND p.BrandID = ?");
-            params.add(brandId.toString());
-        }
-
-        sql.append(" ORDER BY ").append(sortBy).append(" ").append(sortOrder);
-        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
-
+    public int getTotalProductCount() {
+        String sql = "SELECT COUNT(*) FROM Products WHERE IsActive = 1";
         try (Connection conn = getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
-
-            int paramIndex = 1;
-            for (Object param : params) {
-                ps.setObject(paramIndex++, param);
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
             }
-            ps.setInt(paramIndex++, (pageNumber - 1) * pageSize);
-            ps.setInt(paramIndex++, pageSize);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    Product product = new Product();
-                    product.setProductID(UUID.fromString(rs.getString("ProductID")));
-                    product.setProductName(rs.getString("ProductName"));
-                    product.setSku(rs.getString("SKU"));
-
-                    String categoryIdStr = rs.getString("CategoryID");
-                    if (categoryIdStr != null) {
-                        product.setCategoryID(UUID.fromString(categoryIdStr));
-                        Category category = new Category();
-                        category.setCategoryID(UUID.fromString(categoryIdStr));
-                        category.setCategoryName(rs.getString("CategoryName"));
-                        product.setCategory(category);
-                    }
-
-                    String brandIdStr = rs.getString("BrandID");
-                    if (brandIdStr != null) {
-                        product.setBrandID(UUID.fromString(brandIdStr));
-                        Brand brand = new Brand();
-                        brand.setBrandID(UUID.fromString(brandIdStr));
-                        brand.setBrandName(rs.getString("BrandName"));
-                        product.setBrand(brand);
-                    }
-
-                    product.setDescription(rs.getString("Description"));
-                    product.setShortDescription(rs.getString("ShortDescription"));
-                    product.setPrice(rs.getBigDecimal("Price"));
-                    product.setComparePrice(rs.getBigDecimal("ComparePrice"));
-                    product.setCostPrice(rs.getBigDecimal("CostPrice"));
-                    product.setWeight(rs.getBigDecimal("Weight"));
-                    product.setDimensions(rs.getString("Dimensions"));
-                    product.setStockQuantity(rs.getInt("StockQuantity"));
-                    product.setMinStockLevel(rs.getInt("MinStockLevel"));
-                    product.setMaxStockLevel(rs.getInt("MaxStockLevel"));
-                    product.setActive(rs.getBoolean("IsActive"));
-                    product.setFeatured(rs.getBoolean("IsFeatured"));
-                    product.setViewCount(rs.getInt("ViewCount"));
-                    product.setSalesCount(rs.getInt("SalesCount"));
-                    product.setAverageRating(rs.getBigDecimal("AverageRating"));
-                    product.setReviewCount(rs.getInt("ReviewCount"));
-
-                    product.setCreatedDate(rs.getTimestamp("CreatedDate").toLocalDateTime());
-
-                    if (rs.getTimestamp("ModifiedDate") != null) {
-                        product.setModifiedDate(rs.getTimestamp("ModifiedDate").toLocalDateTime());
-                    }
-
-                    // Lấy hình ảnh chính cho sản phẩm
-                    try {
-                        ProductImage mainImage = productImageDAO.getMainImageByProductId(product.getProductID());
-                        if (mainImage != null) {
-                            List<ProductImage> images = new ArrayList<>();
-                            images.add(mainImage);
-                            product.setImages(images);
-                        }
-                    } catch (SQLException e) {
-                        System.err.println("Error fetching main image for product " + product.getProductID() + ": " + e.getMessage());
-                    }
-
-                    products.add(product);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error searching and filtering products: " + e.getMessage());
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Error getting total product count: " + e.getMessage());
             e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            throw new RuntimeException(e);
         }
-        return products;
+        return 0;
     }
 
     /**
@@ -564,5 +458,148 @@ public class ProductDAO extends DBContext {
             throw new RuntimeException(e);
         }
         return 0;
+    }
+
+    /**
+     * Tìm kiếm và lọc sản phẩm dựa trên các tiêu chí.
+     * @param searchTerm Từ khóa tìm kiếm (tên sản phẩm, mô tả, SKU).
+     * @param categoryId ID của danh mục để lọc.
+     * @param brandId ID của thương hiệu để lọc.
+     * @param page Số trang hiện tại.
+     * @param size Số lượng sản phẩm trên mỗi trang.
+     * @param sortBy Tiêu chí sắp xếp (ví dụ: ProductName, Price, CreatedDate).
+     * @param sortOrder Thứ tự sắp xếp (asc hoặc desc).
+     * @return Danh sách các đối tượng Product phù hợp.
+     */
+    public List<Product> searchAndFilterProducts(String searchTerm, UUID categoryId, UUID brandId, int page, int size, String sortBy, String sortOrder) {
+        List<Product> products = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT p.ProductID, p.ProductName, p.SKU, p.CategoryID, p.BrandID, p.Description, p.ShortDescription, " +
+                                              "p.Price, p.ComparePrice, p.CostPrice, p.Weight, p.Dimensions, p.StockQuantity, p.MinStockLevel, p.MaxStockLevel, " +
+                                              "p.IsActive, p.IsFeatured, p.ViewCount, p.SalesCount, p.AverageRating, p.ReviewCount, p.CreatedDate, p.ModifiedDate, " +
+                                              "c.CategoryName, b.BrandName " +
+                                              "FROM Products p " +
+                                              "LEFT JOIN Categories c ON p.CategoryID = c.CategoryID " +
+                                              "LEFT JOIN Brands b ON p.BrandID = b.BrandID " +
+                                              "WHERE p.IsActive = 1");
+        List<Object> params = new ArrayList<>();
+
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sql.append(" AND (p.ProductName LIKE ? OR p.Description LIKE ? OR p.SKU LIKE ?)");
+            String likeTerm = "%" + searchTerm.trim() + "%";
+            params.add(likeTerm);
+            params.add(likeTerm);
+            params.add(likeTerm);
+        }
+
+        if (categoryId != null) {
+            sql.append(" AND p.CategoryID = ?");
+            params.add(categoryId.toString());
+        }
+
+        if (brandId != null) {
+            sql.append(" AND p.BrandID = ?");
+            params.add(brandId.toString());
+        }
+
+        // Sorting
+        if (sortBy != null && !sortBy.trim().isEmpty()) {
+            sql.append(" ORDER BY ").append(sortBy);
+            if (sortOrder != null && sortOrder.equalsIgnoreCase("desc")) {
+                sql.append(" DESC");
+            } else {
+                sql.append(" ASC");
+            }
+        } else {
+            sql.append(" ORDER BY p.ProductName ASC"); // Default sort
+        }
+
+        // Pagination
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        params.add((page - 1) * size);
+        params.add(size);
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            for (Object param : params) {
+                if (param instanceof String) {
+                    ps.setString(paramIndex++, (String) param);
+                } else if (param instanceof UUID) {
+                    ps.setString(paramIndex++, ((UUID) param).toString());
+                } else if (param instanceof Integer) {
+                    ps.setInt(paramIndex++, (Integer) param);
+                } else {
+                    ps.setObject(paramIndex++, param);
+                }
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Product product = new Product();
+                    product.setProductID(UUID.fromString(rs.getString("ProductID")));
+                    product.setProductName(rs.getString("ProductName"));
+                    product.setSku(rs.getString("SKU"));
+                    
+                    String catIdStr = rs.getString("CategoryID");
+                    if (catIdStr != null) {
+                        product.setCategoryID(UUID.fromString(catIdStr));
+                        Category category = new Category();
+                        category.setCategoryID(UUID.fromString(catIdStr));
+                        category.setCategoryName(rs.getString("CategoryName"));
+                        product.setCategory(category);
+                    }
+
+                    String brIdStr = rs.getString("BrandID");
+                    if (brIdStr != null) {
+                        product.setBrandID(UUID.fromString(brIdStr));
+                        Brand brand = new Brand();
+                        brand.setBrandID(UUID.fromString(brIdStr));
+                        brand.setBrandName(rs.getString("BrandName"));
+                        product.setBrand(brand);
+                    }
+                    
+                    product.setDescription(rs.getString("Description"));
+                    product.setShortDescription(rs.getString("ShortDescription"));
+                    product.setPrice(rs.getBigDecimal("Price"));
+                    product.setComparePrice(rs.getBigDecimal("ComparePrice"));
+                    product.setCostPrice(rs.getBigDecimal("CostPrice"));
+                    product.setWeight(rs.getBigDecimal("Weight"));
+                    product.setDimensions(rs.getString("Dimensions"));
+                    product.setStockQuantity(rs.getInt("StockQuantity"));
+                    product.setMinStockLevel(rs.getInt("MinStockLevel"));
+                    product.setMaxStockLevel(rs.getInt("MaxStockLevel"));
+                    product.setActive(rs.getBoolean("IsActive"));
+                    product.setFeatured(rs.getBoolean("IsFeatured"));
+                    product.setViewCount(rs.getInt("ViewCount"));
+                    product.setSalesCount(rs.getInt("SalesCount"));
+                    product.setAverageRating(rs.getBigDecimal("AverageRating"));
+                    product.setReviewCount(rs.getInt("ReviewCount"));
+                    
+                    product.setCreatedDate(rs.getTimestamp("CreatedDate").toLocalDateTime());
+                    
+                    if (rs.getTimestamp("ModifiedDate") != null) {
+                        product.setModifiedDate(rs.getTimestamp("ModifiedDate").toLocalDateTime());
+                    }
+
+                    try {
+                        ProductImage mainImage = productImageDAO.getMainImageByProductId(product.getProductID());
+                        if (mainImage != null) {
+                            List<ProductImage> images = new ArrayList<>();
+                            images.add(mainImage);
+                            product.setImages(images);
+                        }
+                    } catch (SQLException e) {
+                        System.err.println("Error fetching main image for product " + product.getProductID() + ": " + e.getMessage());
+                    }
+
+                    products.add(product);
+                }
+            }
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Error searching and filtering products: " + e.getMessage());
+            e.printStackTrace();
+        }
+        return products;
     }
 }

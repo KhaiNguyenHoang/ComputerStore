@@ -224,6 +224,159 @@ public class OrderDAO extends DBContext {
     }
 
     /**
+     * Lấy tất cả các đơn hàng.
+     * @return Danh sách các đối tượng Order.
+     */
+    public List<Order> getAllOrders() {
+        List<Order> orders = new ArrayList<>();
+        String sql = "SELECT o.OrderID, o.OrderNumber, o.UserID, o.OrderStatus, o.PaymentStatus, o.PaymentMethod, o.PaymentTransactionID, " +
+                "o.SubtotalAmount, o.TaxAmount, o.ShippingAmount, o.DiscountAmount, o.TotalAmount, o.CurrencyCode, " +
+                "o.ShippingAddressID, o.BillingAddressID, o.ShippingTrackingNumber, o.ShippingCarrier, o.Notes, " +
+                "o.OrderDate, o.ShippedDate, o.DeliveredDate, o.ModifiedDate, " +
+                "u.Username, u.Email " +
+                "FROM Orders o JOIN Users u ON o.UserID = u.UserID ORDER BY o.OrderDate DESC";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                Order order = mapResultSetToOrder(rs);
+                // Set user information
+                User user = new User();
+                user.setUserID(UUID.fromString(rs.getString("UserID")));
+                user.setUsername(rs.getString("Username"));
+                user.setEmail(rs.getString("Email"));
+                order.setUser(user);
+
+                order.setOrderItems(getOrderItemsByOrderId(order.getOrderID()));
+                orders.add(order);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error getting all orders: {}", e.getMessage(), e);
+        }
+        return orders;
+    }
+
+    /**
+     * Lấy tổng số đơn hàng.
+     * @return Tổng số đơn hàng.
+     */
+    public int getTotalOrderCount() {
+        String sql = "SELECT COUNT(*) FROM Orders";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error getting total order count: {}", e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    /**
+     * Lấy tổng số đơn hàng có trạng thái 'Pending'.
+     * @return Tổng số đơn hàng 'Pending'.
+     */
+    public int getTotalPendingOrderCount() {
+        String sql = "SELECT COUNT(*) FROM Orders WHERE OrderStatus = 'Pending'";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error getting total pending order count: {}", e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    /**
+     * Lấy tổng số đơn hàng có trạng thái 'Processing'.
+     * @return Tổng số đơn hàng 'Processing'.
+     */
+    public int getTotalProcessingOrderCount() {
+        String sql = "SELECT COUNT(*) FROM Orders WHERE OrderStatus = 'Processing'";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error getting total processing order count: {}", e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    /**
+     * Cập nhật trạng thái của một đơn hàng.
+     * @param orderId ID của đơn hàng cần cập nhật.
+     * @param newStatus Trạng thái mới của đơn hàng (ví dụ: "Pending", "Processing", "Shipped", "Delivered", "Cancelled").
+     * @return true nếu cập nhật thành công, ngược lại false.
+     */
+    public boolean updateOrderStatus(UUID orderId, String newStatus) {
+        String sql = "UPDATE Orders SET OrderStatus = ?, ModifiedDate = ?";
+        if ("Shipped".equalsIgnoreCase(newStatus)) {
+            sql += ", ShippedDate = ?";
+        } else if ("Delivered".equalsIgnoreCase(newStatus)) {
+            sql += ", DeliveredDate = ?, PaymentStatus = ?";
+        }
+        sql += " WHERE OrderID = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, newStatus);
+            stmt.setTimestamp(2, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+            int paramIndex = 3;
+            if ("Shipped".equalsIgnoreCase(newStatus)) {
+                stmt.setTimestamp(paramIndex++, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+            }
+            else if ("Delivered".equalsIgnoreCase(newStatus)) {
+                stmt.setTimestamp(paramIndex++, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+                stmt.setString(paramIndex++, "Paid"); // Set payment status to Paid when delivered
+            }
+            stmt.setString(paramIndex, orderId.toString());
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                LOGGER.info("Order ID {} status updated to {}.", orderId, newStatus);
+                return true;
+            } else {
+                LOGGER.warn("Order ID {} not found for status update.", orderId);
+                return false;
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error updating order status for ID {}: {}", orderId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái thanh toán của một đơn hàng.
+     * @param orderId ID của đơn hàng cần cập nhật.
+     * @param newPaymentStatus Trạng thái thanh toán mới (ví dụ: "Pending", "Paid", "Refunded").
+     * @return true nếu cập nhật thành công, ngược lại false.
+     */
+    public boolean updatePaymentStatus(UUID orderId, String newPaymentStatus) {
+        String sql = "UPDATE Orders SET PaymentStatus = ?, ModifiedDate = ? WHERE OrderID = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, newPaymentStatus);
+            stmt.setTimestamp(2, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+            stmt.setString(3, orderId.toString());
+
+            int rowsAffected = stmt.executeUpdate();
+            if (rowsAffected > 0) {
+                LOGGER.info("Order ID {} payment status updated to {}.", orderId, newPaymentStatus);
+                return true;
+            } else {
+                LOGGER.warn("Order ID {} not found for payment status update.", orderId);
+                return false;
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error updating order payment status for ID {}: {}", orderId, e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
      * Lấy tất cả các mặt hàng trong một đơn hàng cụ thể.
      * @param orderId ID của đơn hàng.
      * @return Danh sách các đối tượng OrderItem.

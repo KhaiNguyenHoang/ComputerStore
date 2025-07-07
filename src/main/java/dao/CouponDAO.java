@@ -187,6 +187,23 @@ public class CouponDAO extends DBContext {
         return false;
     }
 
+    /**
+     * Lấy tổng số mã giảm giá.
+     * @return Tổng số mã giảm giá.
+     */
+    public int getTotalCouponCount() {
+        String sql = "SELECT COUNT(*) FROM Coupons";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Error getting total coupon count: {}", e.getMessage(), e);
+        }
+        return 0;
+    }
+
     private Coupon mapResultSetToCoupon(ResultSet rs) throws SQLException {
         Coupon coupon = new Coupon();
         coupon.setCouponID(UUID.fromString(rs.getString("CouponID")));

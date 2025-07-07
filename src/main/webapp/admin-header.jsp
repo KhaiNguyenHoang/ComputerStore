@@ -66,6 +66,7 @@
         <nav class="nav flex-column">
             <a class="nav-link active" href="${pageContext.request.contextPath}/admin/dashboard"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a>
             <a class="nav-link" href="${pageContext.request.contextPath}/admin/products"><i class="fas fa-box me-2"></i>Quản lý Sản phẩm</a>
+            <a class="nav-link" href="${pageContext.request.contextPath}/admin/orders"><i class="fas fa-shopping-cart me-2"></i>Quản lý Đơn hàng</a>
             <a class="nav-link" href="${pageContext.request.contextPath}/admin/categories"><i class="fas fa-tags me-2"></i>Quản lý Danh mục</a>
             <a class="nav-link" href="${pageContext.request.contextPath}/admin/brands"><i class="fas fa-copyright me-2"></i>Quản lý Thương hiệu</a>
             <a class="nav-link" href="${pageContext.request.contextPath}/admin/users"><i class="fas fa-users me-2"></i>Quản lý Người dùng</a>

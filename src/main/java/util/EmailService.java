@@ -120,9 +120,10 @@ public class EmailService {
 		}
 
 		if (baseUrl == null || baseUrl.isBlank()) {
-			LOGGER.warn("APP_BASE_URL environment variable is not set.");
+			LOGGER.warn("APP_BASE_URL environment variable is not set. Using empty string.");
 			return "";
 		}
+		LOGGER.info("Loaded APP_BASE_URL: {}", baseUrl);
 		return baseUrl;
 	}
 
@@ -139,8 +140,9 @@ public class EmailService {
 			throw new IllegalArgumentException("Email template name cannot be null or empty.");
 		}
 
-		String actualTemplateName = ensureHtmlExtension(templateName);
+				String actualTemplateName = ensureHtmlExtension(templateName);
 		String templateFilePath = fileService.getLocationPath() + "/templates/" + actualTemplateName;
+		LOGGER.info("Attempting to load email template from: {}", templateFilePath);
 		if (!Files.exists(Paths.get(templateFilePath))) {
 			LOGGER.error("Template file not found at expected path: {}", templateFilePath);
 			throw new IOException("Email template not found: " + actualTemplateName);
@@ -155,6 +157,7 @@ public class EmailService {
 		String htmlContent;
 		try {
 			htmlContent = templateEngine.process(actualTemplateName, context);
+			LOGGER.info("Processed HTML content from Thymeleaf: {}", htmlContent);
 		} catch (Exception e) {
 			LOGGER.error("Failed to process email template '{}': {}", actualTemplateName, e.getMessage(), e);
 			throw new IOException("Error processing email template: " + actualTemplateName, e);

@@ -12,7 +12,9 @@ import util.FileService;
 import java.sql.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -36,7 +38,8 @@ public class AuthDAO extends DBContext {
 
     public boolean checkExistEmail(String email) {
         String sql = "SELECT 1 FROM Users WHERE Email = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, email);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
@@ -44,12 +47,15 @@ public class AuthDAO extends DBContext {
         } catch (SQLException e) {
             logger.warning("Failed to check if email exists: " + e.getMessage());
             return false;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
     public boolean checkExistPhoneNumber(String phoneNumber) {
         String sql = "SELECT 1 FROM Users WHERE PhoneNumber = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, phoneNumber);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
@@ -57,12 +63,15 @@ public class AuthDAO extends DBContext {
         } catch (SQLException e) {
             logger.warning("Failed to check if phone number exists: " + e.getMessage());
             return false;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
     public boolean checkExistUsername(String username) {
         String sql = "SELECT 1 FROM Users WHERE Username = ?";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, username);
             try (ResultSet resultSet = statement.executeQuery()) {
                 return resultSet.next();
@@ -70,6 +79,8 @@ public class AuthDAO extends DBContext {
         } catch (SQLException e) {
             logger.warning("Failed to check if username exists: " + e.getMessage());
             return false;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -82,9 +93,10 @@ public class AuthDAO extends DBContext {
     }
 
     public User login(LoginRequestDTO loginRequest) throws SQLException {
-        String sql = "SELECT UserID, Username, Email, PasswordHash, Salt, FirstName, LastName, IsEmailVerified, IsActive, Role, CreatedDate, ModifiedDate, LastLoginDate " +
+        String sql = "SELECT UserID, Username, Email, PasswordHash, Salt, FirstName, LastName, PhoneNumber, DateOfBirth, Gender, IsEmailVerified, IsActive, Role, CreatedDate, ModifiedDate, LastLoginDate " +
                 "FROM Users WHERE Username = ? AND IsActive = 1";
-        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
             statement.setString(1, loginRequest.getUsername());
             try (ResultSet resultSet = statement.executeQuery()) {
                 if (!resultSet.next()) {
@@ -111,6 +123,12 @@ public class AuthDAO extends DBContext {
                 user.setSalt(resultSet.getString("Salt"));
                 user.setFirstName(resultSet.getString("FirstName"));
                 user.setLastName(resultSet.getString("LastName"));
+                user.setPhoneNumber(resultSet.getString("PhoneNumber"));
+                Date dob = resultSet.getDate("DateOfBirth");
+                if (dob != null) {
+                    user.setDateOfBirth(dob.toLocalDate());
+                }
+                user.setGender(resultSet.getString("Gender"));
                 user.setEmailVerified(resultSet.getBoolean("IsEmailVerified"));
                 user.setActive(resultSet.getBoolean("IsActive"));
                 user.setRole(resultSet.getString("Role"));
@@ -122,7 +140,8 @@ public class AuthDAO extends DBContext {
                 }
 
                 String updateSql = "UPDATE Users SET LastLoginDate = CURRENT_TIMESTAMP WHERE UserID = ?";
-                try (PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+                try (Connection connUpdate = getConnection();
+                     PreparedStatement updateStmt = connUpdate.prepareStatement(updateSql)) {
                     updateStmt.setString(1, user.getUserID().toString());
                     updateStmt.executeUpdate();
                 }
@@ -131,8 +150,10 @@ public class AuthDAO extends DBContext {
                 return user;
             }
         } catch (SQLException e) {
-            logger.warning("Failed to login for username: " + loginRequest.getUsername() + " - " + e.getMessage());
+            logger.warning("Login failed for: " + loginRequest.getUsername() + " - " + e.getMessage());
             throw e;
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -192,8 +213,9 @@ public class AuthDAO extends DBContext {
                     return false;
                 }
                 String userIdStr = rs.getString("UserID");
+                logger.info("Retrieved UserID string: " + userIdStr);
                 if (userIdStr == null) {
-                    logger.severe("Generated UserID is null");
+                    logger.severe("Generated UserID is null, returning false.");
                     return false;
                 }
                 UUID userId = UUID.fromString(userIdStr);
@@ -201,12 +223,13 @@ public class AuthDAO extends DBContext {
 
                 UUID token = UUID.randomUUID();
                 LocalDateTime expiryDate = LocalDateTime.now().plusHours(24);
-                String tokenSql = "INSERT INTO EmailVerificationTokens (UserID, Token, TokenType, ExpiryDate) VALUES (?, ?, ?, ?)";
+                String tokenSql = "INSERT INTO EmailVerificationTokens (TokenID, UserID, Token, TokenType, ExpiryDate) VALUES (?, ?, ?, ?, ?)";
                 try (PreparedStatement tokenStmt = connection.prepareStatement(tokenSql)) {
-                    tokenStmt.setString(1, userId.toString());
-                    tokenStmt.setString(2, token.toString());
-                    tokenStmt.setString(3, "EMAIL_VERIFICATION");
-                    tokenStmt.setTimestamp(4, Timestamp.valueOf(expiryDate));
+                    tokenStmt.setString(1, token.toString()); // Use the same UUID for TokenID
+                    tokenStmt.setString(2, userId.toString());
+                    tokenStmt.setString(3, token.toString());
+                    tokenStmt.setString(4, "EMAIL_VERIFICATION");
+                    tokenStmt.setTimestamp(5, Timestamp.valueOf(expiryDate));
                     tokenStmt.executeUpdate();
                 }
 
@@ -227,9 +250,12 @@ public class AuthDAO extends DBContext {
                 } catch (Exception e) {
                     logger.severe("Failed to send verification email: " + e.getMessage());
                     String deleteSql = "DELETE FROM Users WHERE UserID = ?";
-                    try (PreparedStatement deleteStmt = connection.prepareStatement(deleteSql)) {
+                    try (Connection conn = getConnection();
+                         PreparedStatement deleteStmt = conn.prepareStatement(deleteSql)) {
                         deleteStmt.setString(1, userId.toString());
                         deleteStmt.executeUpdate();
+                    } catch (ClassNotFoundException ex) {
+                        throw new RuntimeException(ex);
                     }
                     return false;
                 }
@@ -267,20 +293,24 @@ public class AuthDAO extends DBContext {
                 }
 
                 String updateTokenSql = "UPDATE EmailVerificationTokens SET IsUsed = 1, UsedDate = CURRENT_TIMESTAMP WHERE TokenID = ?";
-                try (PreparedStatement updateTokenStmt = connection.prepareStatement(updateTokenSql)) {
+                try (Connection connUpdateToken = getConnection();
+                     PreparedStatement updateTokenStmt = connUpdateToken.prepareStatement(updateTokenSql)) {
                     updateTokenStmt.setString(1, tokenId.toString());
                     updateTokenStmt.executeUpdate();
+                } catch (ClassNotFoundException e) {
+                    throw new RuntimeException(e);
                 }
 
                 String updateUserSql = "UPDATE Users SET IsEmailVerified = 1, ModifiedDate = CURRENT_TIMESTAMP WHERE UserID = ?";
-                try (PreparedStatement updateUserStmt = connection.prepareStatement(updateUserSql)) {
+                try (Connection conn = getConnection();
+                     PreparedStatement updateUserStmt = conn.prepareStatement(updateUserSql)) {
                     updateUserStmt.setString(1, userId.toString());
                     updateUserStmt.executeUpdate();
                 }
 
                 return true;
             }
-        } catch (SQLException e) {
+        } catch (SQLException | ClassNotFoundException e) {
             logger.severe("Failed to verify email: " + e.getMessage());
             return false;
         }
@@ -302,7 +332,8 @@ public class AuthDAO extends DBContext {
                 UUID token = UUID.randomUUID();
                 LocalDateTime expiryDate = LocalDateTime.now().plusHours(1);
                 String tokenSql = "INSERT INTO EmailVerificationTokens (UserID, Token, TokenType, ExpiryDate) VALUES (?, ?, ?, ?)";
-                try (PreparedStatement tokenStmt = connection.prepareStatement(tokenSql)) {
+                try (Connection conn = getConnection();
+                     PreparedStatement tokenStmt = conn.prepareStatement(tokenSql)) {
                     tokenStmt.setString(1, userId.toString());
                     tokenStmt.setString(2, token.toString());
                     tokenStmt.setString(3, "PASSWORD_RESET");
@@ -373,7 +404,8 @@ public class AuthDAO extends DBContext {
                 }
 
                 String emailSql = "SELECT Email, FirstName FROM Users WHERE UserID = ?";
-                try (PreparedStatement emailStmt = connection.prepareStatement(emailSql)) {
+                try (Connection conn = getConnection();
+                     PreparedStatement emailStmt = conn.prepareStatement(emailSql)) {
                     emailStmt.setString(1, userId.toString());
                     try (ResultSet emailRs = emailStmt.executeQuery()) {
                         if (emailRs.next()) {
@@ -399,6 +431,184 @@ public class AuthDAO extends DBContext {
             logger.severe("Failed to reset password: " + e.getMessage());
             return false;
         }
+    }
+
+    /**
+     * Lấy thông tin người dùng bằng UserID.
+     * @param userId UUID của người dùng.
+     * @return Đối tượng User nếu tìm thấy, ngược lại trả về null.
+     */
+    public User getUserById(UUID userId) {
+        String sql = "SELECT UserID, Username, Email, PasswordHash, Salt, FirstName, LastName, PhoneNumber, DateOfBirth, Gender, IsEmailVerified, IsActive, Role, CreatedDate, ModifiedDate, LastLoginDate FROM Users WHERE UserID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, userId.toString());
+            try (ResultSet resultSet = statement.executeQuery()) {
+                if (resultSet.next()) {
+                    User user = new User();
+                    user.setUserID(UUID.fromString(resultSet.getString("UserID")));
+                    user.setUsername(resultSet.getString("Username"));
+                    user.setEmail(resultSet.getString("Email"));
+                    user.setPasswordHash(resultSet.getString("PasswordHash"));
+                    user.setSalt(resultSet.getString("Salt"));
+                    user.setFirstName(resultSet.getString("FirstName"));
+                    user.setLastName(resultSet.getString("LastName"));
+                    user.setPhoneNumber(resultSet.getString("PhoneNumber"));
+                    
+                    Date dob = resultSet.getDate("DateOfBirth");
+                    if (dob != null) {
+                        user.setDateOfBirth(dob.toLocalDate());
+                    }
+                    user.setGender(resultSet.getString("Gender"));
+                    user.setEmailVerified(resultSet.getBoolean("IsEmailVerified"));
+                    user.setActive(resultSet.getBoolean("IsActive"));
+                    user.setRole(resultSet.getString("Role"));
+                    user.setCreatedDate(resultSet.getTimestamp("CreatedDate").toLocalDateTime());
+                    
+                    Timestamp modifiedDate = resultSet.getTimestamp("ModifiedDate");
+                    if (modifiedDate != null) {
+                        user.setModifiedDate(modifiedDate.toLocalDateTime());
+                    }
+                    Timestamp lastLogin = resultSet.getTimestamp("LastLoginDate");
+                    if (lastLogin != null) {
+                        user.setLastLoginDate(lastLogin.toLocalDateTime());
+                    }
+                    return user;
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to get user by ID: " + userId + " - " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
+    }
+
+    /**
+     * Lấy tất cả người dùng từ cơ sở dữ liệu với phân trang và sắp xếp.
+     * @param pageNumber Số trang (bắt đầu từ 1).
+     * @param pageSize Kích thước trang.
+     * @param sortBy Trường để sắp xếp (Username, Email, CreatedDate, v.v.).
+     * @param sortOrder Thứ tự sắp xếp (asc, desc).
+     * @return Danh sách các đối tượng User.
+     */
+    public List<User> getAllUsers(int pageNumber, int pageSize, String sortBy, String sortOrder) {
+        List<User> users = new ArrayList<>();
+        String sql = "SELECT UserID, Username, Email, FirstName, LastName, PhoneNumber, DateOfBirth, Gender, IsEmailVerified, IsActive, Role, CreatedDate, ModifiedDate, LastLoginDate FROM Users ORDER BY " + sortBy + " " + sortOrder + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setInt(1, (pageNumber - 1) * pageSize);
+            statement.setInt(2, pageSize);
+            try (ResultSet resultSet = statement.executeQuery()) {
+                while (resultSet.next()) {
+                    User user = new User();
+                    user.setUserID(UUID.fromString(resultSet.getString("UserID")));
+                    user.setUsername(resultSet.getString("Username"));
+                    user.setEmail(resultSet.getString("Email"));
+                    user.setFirstName(resultSet.getString("FirstName"));
+                    user.setLastName(resultSet.getString("LastName"));
+                    user.setPhoneNumber(resultSet.getString("PhoneNumber"));
+                    Date dob = resultSet.getDate("DateOfBirth");
+                    if (dob != null) {
+                        user.setDateOfBirth(dob.toLocalDate());
+                    }
+                    user.setGender(resultSet.getString("Gender"));
+                    user.setEmailVerified(resultSet.getBoolean("IsEmailVerified"));
+                    user.setActive(resultSet.getBoolean("IsActive"));
+                    user.setRole(resultSet.getString("Role"));
+                    user.setCreatedDate(resultSet.getTimestamp("CreatedDate").toLocalDateTime());
+                    Timestamp modifiedDate = resultSet.getTimestamp("ModifiedDate");
+                    if (modifiedDate != null) {
+                        user.setModifiedDate(modifiedDate.toLocalDateTime());
+                    }
+                    Timestamp lastLogin = resultSet.getTimestamp("LastLoginDate");
+                    if (lastLogin != null) {
+                        user.setLastLoginDate(lastLogin.toLocalDateTime());
+                    }
+                    users.add(user);
+                }
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to get all users paged: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return users;
+    }
+
+    /**
+     * Lấy tổng số người dùng.
+     * @return Tổng số người dùng.
+     */
+    public int getTotalUserCount() {
+        String sql = "SELECT COUNT(*) FROM Users";
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql);
+             ResultSet resultSet = statement.executeQuery()) {
+            if (resultSet.next()) {
+                return resultSet.getInt(1);
+            }
+        } catch (SQLException e) {
+            logger.severe("Failed to get total user count: " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return 0;
+    }
+
+    /**
+     * Cập nhật vai trò và trạng thái hoạt động của người dùng.
+     * @param userId ID của người dùng cần cập nhật.
+     * @param role Vai trò mới.
+     * @param isActive Trạng thái hoạt động mới.
+     * @return true nếu cập nhật thành công, false nếu thất bại.
+     */
+    public boolean updateUserRoleAndStatus(UUID userId, String role, boolean isActive) {
+        String sql = "UPDATE Users SET Role = ?, IsActive = ?, ModifiedDate = CURRENT_TIMESTAMP WHERE UserID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, role);
+            statement.setBoolean(2, isActive);
+            statement.setString(3, userId.toString());
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            logger.severe("Failed to update user role and status for user " + userId + ": " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return false;
+    }
+
+    /**
+     * Cập nhật thông tin hồ sơ người dùng.
+     * @param user Đối tượng User chứa thông tin cần cập nhật.
+     * @return true nếu cập nhật thành công, false nếu thất bại.
+     */
+    public boolean updateUserProfile(User user) {
+        String sql = "UPDATE Users SET Username = ?, Email = ?, FirstName = ?, LastName = ?, PhoneNumber = ?, DateOfBirth = ?, Gender = ?, ModifiedDate = CURRENT_TIMESTAMP WHERE UserID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement statement = conn.prepareStatement(sql)) {
+            statement.setString(1, user.getUsername());
+            statement.setString(2, user.getEmail());
+            statement.setString(3, user.getFirstName());
+            statement.setString(4, user.getLastName());
+            statement.setString(5, user.getPhoneNumber());
+            if (user.getDateOfBirth() != null) {
+                statement.setDate(6, Date.valueOf(user.getDateOfBirth()));
+            } else {
+                statement.setNull(6, Types.DATE);
+            }
+            statement.setString(7, user.getGender());
+            statement.setString(8, user.getUserID().toString());
+            int rowsAffected = statement.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            logger.severe("Failed to update user profile for user " + user.getUserID() + ": " + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return false;
     }
 
     public static void main(String[] args) {

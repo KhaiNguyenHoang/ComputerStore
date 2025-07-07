@@ -1,29 +1,53 @@
-<%@ page contentType="text/html;charset=UTF-8" %>
-<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<!DOCTYPE html>
 <html>
 <head>
-    <title>Reset Password</title>
+    <title>Đặt Lại Mật Khẩu</title>
     <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
-        .error { color: red; }
-        .message { color: green; }
+        body { font-family: Arial, sans-serif; background-color: #f4f4f4; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background-color: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; color: #555; }
+        .form-group input[type="password"] {
+            width: calc(100% - 20px); padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px;
+        }
+        .form-group button { width: 100%; padding: 10px; background-color: #007bff; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        .form-group button:hover { background-color: #0056b3; }
+        .message { color: red; text-align: center; margin-bottom: 15px; }
+        .success-message { color: green; text-align: center; margin-bottom: 15px; }
     </style>
 </head>
 <body>
-<h2>Set New Password</h2>
-<c:if test="${not empty error}">
-    <p class="error">${error}</p>
-</c:if>
-<c:if test="${not empty message}">
-    <p class="message">${message}</p>
-</c:if>
-<form action="reset-password" method="post">
-    <%String token = request.getParameter("token");%>
-    <input type="hidden" name="token" value="<%=token%>">
-    <label>New Password: <input type="password" name="newPassword" required></label><br>
-    <label>Confirm Password: <input type="password" name="confirmPassword" required></label><br>
-    <input type="submit" value="Reset Password">
-</form>
-<a href="forgot-password">Request a new reset link</a> | <a href="login">Back to Login</a>
+    <div class="container">
+        <h2>Đặt Lại Mật Khẩu</h2>
+        <c:if test="${not empty requestScope.errorMessage}">
+            <p class="message">${requestScope.errorMessage}</p>
+        </c:if>
+        <c:if test="${not empty requestScope.successMessage}">
+            <p class="success-message">${requestScope.successMessage}</p>
+        </c:if>
+        <c:if test="${not empty param.token}">
+            <form action="${pageContext.request.contextPath}/reset-password" method="post">
+                
+                <input type="hidden" name="token" value="${param.token}">
+                <div class="form-group">
+                    <label for="newPassword">Mật khẩu mới:</label>
+                    <input type="password" id="newPassword" name="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label for="confirmPassword">Xác nhận mật khẩu mới:</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit">Đặt Lại Mật Khẩu</button>
+                </div>
+            </form>
+        </c:if>
+        <c:if test="${empty param.token}">
+            <p class="message">Token đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.</p>
+        </c:if>
+    </div>
 </body>
 </html>

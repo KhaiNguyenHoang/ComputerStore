@@ -1,6 +1,6 @@
 package dao;
 
-import dto.ProductReviewResponseDTO; // Import DTO mới
+import dto.ProductReviewResponseDTO;
 import model.ProductReview;
 import util.DBContext;
 
@@ -16,7 +16,6 @@ public class ProductReviewDAO extends DBContext {
 
     /**
      * Thêm một đánh giá mới vào CSDL.
-     * Phương thức này vẫn nhận vào model.ProductReview để thể hiện đúng bản chất dữ liệu cần lưu.
      * @param review Đối tượng ProductReview để thêm.
      * @return true nếu thêm thành công, false nếu thất bại.
      */
@@ -36,7 +35,6 @@ public class ProductReviewDAO extends DBContext {
             int rowsAffected = stmt.executeUpdate();
             if (rowsAffected > 0) {
                 LOGGER.info("Successfully added review for product ID {}", review.getProductID());
-                // Cân nhắc gọi trigger hoặc một stored procedure để cập nhật điểm trung bình
             }
             return rowsAffected > 0;
         } catch (SQLException e) {
@@ -52,7 +50,6 @@ public class ProductReviewDAO extends DBContext {
      */
     public List<ProductReviewResponseDTO> getPublishedReviewsByProductId(UUID productId) throws SQLException {
         List<ProductReviewResponseDTO> reviewDTOs = new ArrayList<>();
-        // JOIN với bảng Users để lấy thông tin người đánh giá
         String sql = "SELECT pr.ReviewID, pr.ProductID, pr.UserID, pr.Rating, pr.Title, pr.ReviewText, " +
                 "pr.IsVerifiedPurchase, pr.IsPublished, pr.HelpfulCount, pr.CreatedDate, " +
                 "u.Username, u.FirstName, u.LastName " +
@@ -74,6 +71,54 @@ public class ProductReviewDAO extends DBContext {
             throw e;
         }
         return reviewDTOs;
+    }
+
+    /**
+     * Lấy TẤT CẢ các đánh giá (cả đã duyệt và chưa duyệt) cho trang quản trị với phân trang và sắp xếp.
+     * @param pageNumber Số trang (bắt đầu từ 1).
+     * @param pageSize Kích thước trang.
+     * @param sortBy Trường để sắp xếp (ReviewID, ProductID, UserID, Rating, CreatedDate, v.v.).
+     * @param sortOrder Thứ tự sắp xếp (asc, desc).
+     * @return Danh sách DTO của tất cả các đánh giá.
+     */
+    public List<ProductReviewResponseDTO> getAllReviewsPaged(int pageNumber, int pageSize, String sortBy, String sortOrder) throws SQLException {
+        List<ProductReviewResponseDTO> reviewDTOs = new ArrayList<>();
+        String sql = "SELECT pr.ReviewID, pr.ProductID, pr.UserID, pr.Rating, pr.Title, pr.ReviewText, " +
+                "pr.IsVerifiedPurchase, pr.IsPublished, pr.HelpfulCount, pr.CreatedDate, " +
+                "u.Username, u.FirstName, u.LastName " +
+                "FROM ProductReviews pr " +
+                "JOIN Users u ON pr.UserID = u.UserID " +
+                "ORDER BY pr." + sortBy + " " + sortOrder + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, (pageNumber - 1) * pageSize);
+            stmt.setInt(2, pageSize);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    reviewDTOs.add(mapResultSetToReviewDTO(rs));
+                }
+            }
+            LOGGER.info("Retrieved {} reviews for admin page {} size {}.", reviewDTOs.size(), pageNumber, pageSize);
+        } catch (SQLException e) {
+            LOGGER.error("Failed to retrieve reviews paged for admin: {}", e.getMessage(), e);
+            throw e;
+        }
+        return reviewDTOs;
+    }
+
+    /**
+     * Lấy tổng số đánh giá.
+     * @return Tổng số đánh giá.
+     */
+    public int getTotalReviewCount() throws SQLException {
+        String sql = "SELECT COUNT(*) FROM ProductReviews";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        }
+        return 0;
     }
 
     /**
@@ -101,34 +146,6 @@ public class ProductReviewDAO extends DBContext {
         dto.setUserFullName((firstName != null ? firstName : "") + " " + (lastName != null ? lastName : ""));
 
         return dto;
-    }
-
-    // Trong lớp dao.ProductReviewDAO
-
-    /**
-     * Lấy TẤT CẢ các đánh giá (cả đã duyệt và chưa duyệt) cho trang quản trị.
-     * @return Danh sách DTO của tất cả các đánh giá.
-     */
-    public List<ProductReviewResponseDTO> getAllReviews() throws SQLException {
-        List<ProductReviewResponseDTO> reviewDTOs = new ArrayList<>();
-        String sql = "SELECT pr.ReviewID, pr.ProductID, pr.UserID, pr.Rating, pr.Title, pr.ReviewText, " +
-                "pr.IsVerifiedPurchase, pr.IsPublished, pr.HelpfulCount, pr.CreatedDate, " +
-                "u.Username, u.FirstName, u.LastName " +
-                "FROM ProductReviews pr " +
-                "JOIN Users u ON pr.UserID = u.UserID " +
-                "ORDER BY pr.CreatedDate DESC";
-
-        try (Statement stmt = connection.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-            while (rs.next()) {
-                reviewDTOs.add(mapResultSetToReviewDTO(rs)); // Dùng lại phương thức map đã có
-            }
-            LOGGER.info("Retrieved all {} reviews for admin.", reviewDTOs.size());
-        } catch (SQLException e) {
-            LOGGER.error("Failed to retrieve all reviews for admin: {}", e.getMessage(), e);
-            throw e;
-        }
-        return reviewDTOs;
     }
 
     /**
@@ -199,8 +216,6 @@ public class ProductReviewDAO extends DBContext {
         return null;
     }
 
-    // Đặt phương thức này bên trong lớp public class ProductReviewDAO extends DBContext { ... }
-
     /**
      * Cập nhật điểm đánh giá trung bình và tổng số lượng đánh giá cho một sản phẩm cụ thể.
      * Phương thức này nên được gọi sau mỗi lần thêm, sửa đổi trạng thái (publish/unpublish), hoặc xóa một đánh giá.
@@ -209,10 +224,6 @@ public class ProductReviewDAO extends DBContext {
      * @throws SQLException Nếu có lỗi khi truy cập CSDL.
      */
     public void updateProductRating(UUID productId) throws SQLException {
-        // Câu lệnh SQL này sử dụng các hàm tổng hợp (aggregate functions) để tính toán lại các giá trị.
-        // AVG(CAST(Rating AS DECIMAL(3,2))) để tính trung bình với độ chính xác.
-        // COUNT(*) để đếm số lượng review đã được duyệt.
-        // ISNULL(..., 0) để đảm bảo nếu không có review nào, giá trị sẽ là 0 thay vì NULL.
         String sql = "UPDATE Products " +
                 "SET " +
                 "    AverageRating = ISNULL((SELECT AVG(CAST(Rating AS DECIMAL(3,2))) FROM ProductReviews WHERE ProductID = ? AND IsPublished = 1), 0), " +
@@ -220,7 +231,6 @@ public class ProductReviewDAO extends DBContext {
                 "WHERE ProductID = ?";
 
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            // Gán tham số productId cho cả 3 vị trí `?` trong câu lệnh SQL
             stmt.setString(1, productId.toString());
             stmt.setString(2, productId.toString());
             stmt.setString(3, productId.toString());
@@ -234,7 +244,6 @@ public class ProductReviewDAO extends DBContext {
             }
         } catch (SQLException e) {
             LOGGER.error("Failed to update product rating stats for ID {}: {}", productId, e.getMessage(), e);
-            // Ném lại ngoại lệ để tầng trên có thể xử lý (ví dụ: rollback transaction)
             throw e;
         }
     }

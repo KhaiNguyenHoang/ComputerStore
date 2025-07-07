@@ -1,268 +1,237 @@
 package dao;
 
-import model.Brand;
-import model.Category;
 import model.Product;
+import model.Category;
+import model.Brand;
+import model.ProductImage;
 import util.DBContext;
 
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
+import java.sql.Statement;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
-import java.util.logging.Logger;
-import java.math.BigDecimal;
 
 public class ProductDAO extends DBContext {
-    private static final Logger logger = Logger.getLogger(ProductDAO.class.getName());
 
-    public List<Product> getProducts(int page, int pageSize) throws SQLException {
+    private final ProductImageDAO productImageDAO = new ProductImageDAO(new util.FileService()); // Khởi tạo FileService mặc định
+
+    /**
+     * Lấy tất cả sản phẩm từ cơ sở dữ liệu.
+     * @return Danh sách các đối tượng Product.
+     */
+    public List<Product> getAllProducts() {
         List<Product> products = new ArrayList<>();
-        String sql = "SELECT p.ProductID, p.ProductName, p.SKU, p.CategoryID, c.CategoryName, " +
-                "p.BrandID, b.BrandName, p.Description, p.ShortDescription, p.Price, " +
-                "p.ComparePrice, p.CostPrice, p.Weight, p.Dimensions, p.StockQuantity, " +
-                "p.MinStockLevel, p.MaxStockLevel, p.IsActive, p.IsFeatured, p.ViewCount, " +
-                "p.SalesCount, p.AverageRating, p.ReviewCount, p.CreatedDate, p.ModifiedDate " +
-                "FROM Products p " +
-                "LEFT JOIN Categories c ON p.CategoryID = c.CategoryID " +
-                "LEFT JOIN Brands b ON p.BrandID = b.BrandID " +
-                "WHERE p.IsActive = 1 " +
-                "ORDER BY p.ProductName " +
-                "OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+        String sql = "SELECT p.ProductID, p.ProductName, p.SKU, p.CategoryID, p.BrandID, p.Description, p.ShortDescription, " +
+                     "p.Price, p.ComparePrice, p.CostPrice, p.Weight, p.Dimensions, p.StockQuantity, p.MinStockLevel, p.MaxStockLevel, " +
+                     "p.IsActive, p.IsFeatured, p.ViewCount, p.SalesCount, p.AverageRating, p.ReviewCount, p.CreatedDate, p.ModifiedDate, " +
+                     "c.CategoryName, b.BrandName " +
+                     "FROM Products p " +
+                     "LEFT JOIN Categories c ON p.CategoryID = c.CategoryID " +
+                     "LEFT JOIN Brands b ON p.BrandID = b.BrandID " +
+                     "WHERE p.IsActive = 1"; // Chỉ lấy sản phẩm đang hoạt động
+        
+        try (Connection conn = getConnection(); // Lấy kết nối mới từ DBContext
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            int offset = (page - 1) * pageSize;
-            stmt.setInt(1, offset);
-            stmt.setInt(2, pageSize);
-            try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    Category category = null;
-                    if (rs.getString("CategoryID") != null) {
-                        category = new Category();
-                        category.setCategoryID(UUID.fromString(rs.getString("CategoryID")));
-                        category.setCategoryName(rs.getString("CategoryName"));
-                    }
-
-                    Brand brand = null;
-                    if (rs.getString("BrandID") != null) {
-                        brand = new Brand();
-                        brand.setBrandID(UUID.fromString(rs.getString("BrandID")));
-                        brand.setBrandName(rs.getString("BrandName"));
-                    }
-
-                    Product product = new Product();
-                    product.setProductID(rs.getString("ProductID") != null ? UUID.fromString(rs.getString("ProductID")) : null);
-                    product.setProductName(rs.getString("ProductName"));
-                    product.setSku(rs.getString("SKU"));
-                    product.setCategoryID(rs.getString("CategoryID") != null ? UUID.fromString(rs.getString("CategoryID")) : null);
-                    product.setBrandID(rs.getString("BrandID") != null ? UUID.fromString(rs.getString("BrandID")) : null);
+            while (rs.next()) {
+                Product product = new Product();
+                product.setProductID(UUID.fromString(rs.getString("ProductID")));
+                product.setProductName(rs.getString("ProductName"));
+                product.setSku(rs.getString("SKU"));
+                
+                String categoryIdStr = rs.getString("CategoryID");
+                if (categoryIdStr != null) {
+                    product.setCategoryID(UUID.fromString(categoryIdStr));
+                    Category category = new Category();
+                    category.setCategoryID(UUID.fromString(categoryIdStr));
+                    category.setCategoryName(rs.getString("CategoryName"));
                     product.setCategory(category);
-                    product.setBrand(brand);
-                    product.setDescription(rs.getString("Description"));
-                    product.setShortDescription(rs.getString("ShortDescription"));
-                    product.setPrice(rs.getBigDecimal("Price"));
-                    product.setComparePrice(rs.getBigDecimal("ComparePrice"));
-                    product.setCostPrice(rs.getBigDecimal("CostPrice"));
-                    product.setWeight(rs.getBigDecimal("Weight"));
-                    product.setDimensions(rs.getString("Dimensions"));
-                    product.setStockQuantity(rs.getInt("StockQuantity"));
-                    product.setMinStockLevel(rs.getInt("MinStockLevel"));
-                    product.setMaxStockLevel(rs.getInt("MaxStockLevel"));
-                    product.setActive(rs.getBoolean("IsActive"));
-                    product.setFeatured(rs.getBoolean("IsFeatured"));
-                    product.setViewCount(rs.getInt("ViewCount"));
-                    product.setSalesCount(rs.getInt("SalesCount"));
-                    product.setAverageRating(rs.getBigDecimal("AverageRating"));
-                    product.setReviewCount(rs.getInt("ReviewCount"));
-                    Timestamp createdDate = rs.getTimestamp("CreatedDate");
-                    product.setCreatedDate(createdDate != null ? createdDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null);
-                    Timestamp modifiedDate = rs.getTimestamp("ModifiedDate");
-                    product.setModifiedDate(modifiedDate != null ? modifiedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null);
-
-                    products.add(product);
                 }
+
+                String brandIdStr = rs.getString("BrandID");
+                if (brandIdStr != null) {
+                    product.setBrandID(UUID.fromString(brandIdStr));
+                    Brand brand = new Brand();
+                    brand.setBrandID(UUID.fromString(brandIdStr));
+                    brand.setBrandName(rs.getString("BrandName"));
+                    product.setBrand(brand);
+                }
+                
+                product.setDescription(rs.getString("Description"));
+                product.setShortDescription(rs.getString("ShortDescription"));
+                product.setPrice(rs.getBigDecimal("Price"));
+                product.setComparePrice(rs.getBigDecimal("ComparePrice"));
+                product.setCostPrice(rs.getBigDecimal("CostPrice"));
+                product.setWeight(rs.getBigDecimal("Weight"));
+                product.setDimensions(rs.getString("Dimensions"));
+                product.setStockQuantity(rs.getInt("StockQuantity"));
+                product.setMinStockLevel(rs.getInt("MinStockLevel"));
+                product.setMaxStockLevel(rs.getInt("MaxStockLevel"));
+                product.setActive(rs.getBoolean("IsActive"));
+                product.setFeatured(rs.getBoolean("IsFeatured"));
+                product.setViewCount(rs.getInt("ViewCount"));
+                product.setSalesCount(rs.getInt("SalesCount"));
+                product.setAverageRating(rs.getBigDecimal("AverageRating"));
+                product.setReviewCount(rs.getInt("ReviewCount"));
+                
+                product.setCreatedDate(rs.getTimestamp("CreatedDate").toLocalDateTime());
+                
+                if (rs.getTimestamp("ModifiedDate") != null) {
+                    product.setModifiedDate(rs.getTimestamp("ModifiedDate").toLocalDateTime());
+                }
+
+                // Lấy hình ảnh chính cho sản phẩm
+                try {
+                    ProductImage mainImage = productImageDAO.getMainImageByProductId(product.getProductID());
+                    if (mainImage != null) {
+                        List<ProductImage> images = new ArrayList<>();
+                        images.add(mainImage);
+                        product.setImages(images);
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Error fetching main image for product " + product.getProductID() + ": " + e.getMessage());
+                }
+
+                products.add(product);
             }
-            logger.info("Retrieved " + products.size() + " products for page " + page);
-        } catch (SQLException e) {
-            logger.severe("Failed to get products: " + e.getMessage());
-            throw new SQLException("Error retrieving products: " + e.getMessage(), e);
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Error fetching all products: " + e.getMessage());
+            e.printStackTrace();
         }
         return products;
     }
 
-    public int getTotalProducts() throws SQLException {
-        String sql = "SELECT COUNT(*) FROM Products WHERE IsActive = 1";
-        try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            logger.severe("Failed to get total products: " + e.getMessage());
-            throw new SQLException("Error retrieving total products: " + e.getMessage(), e);
-        }
-        return 0;
-    }
+    /**
+     * Lấy tất cả sản phẩm từ cơ sở dữ liệu, bao gồm cả sản phẩm không hoạt động (dành cho Admin).
+     * @return Danh sách các đối tượng Product.
+     */
+    public List<Product> getAllProductsForAdmin() {
+        List<Product> products = new ArrayList<>();
+        String sql = "SELECT p.ProductID, p.ProductName, p.SKU, p.CategoryID, p.BrandID, p.Description, p.ShortDescription, " +
+                     "p.Price, p.ComparePrice, p.CostPrice, p.Weight, p.Dimensions, p.StockQuantity, p.MinStockLevel, p.MaxStockLevel, " +
+                     "p.IsActive, p.IsFeatured, p.ViewCount, p.SalesCount, p.AverageRating, p.ReviewCount, p.CreatedDate, p.ModifiedDate, " +
+                     "c.CategoryName, b.BrandName " +
+                     "FROM Products p " +
+                     "LEFT JOIN Categories c ON p.CategoryID = c.CategoryID " +
+                     "LEFT JOIN Brands b ON p.BrandID = b.BrandID";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
 
-    public UUID addProduct(Product product) throws SQLException {
-        String sql = "INSERT INTO Products (ProductID, ProductName, SKU, CategoryID, BrandID, Description, " +
-                "ShortDescription, Price, ComparePrice, CostPrice, Weight, Dimensions, StockQuantity, " +
-                "MinStockLevel, MaxStockLevel, IsActive, IsFeatured, ViewCount, SalesCount, " +
-                "AverageRating, ReviewCount, CreatedDate, ModifiedDate) " +
-                "OUTPUT INSERTED.ProductID " +
-                "VALUES (NEWID(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, product.getProductName());
-            stmt.setString(2, product.getSku());
-            stmt.setObject(3, product.getCategoryID() != null ? product.getCategoryID().toString() : null);
-            stmt.setObject(4, product.getBrandID() != null ? product.getBrandID().toString() : null);
-            stmt.setString(5, product.getDescription());
-            stmt.setString(6, product.getShortDescription());
-            stmt.setBigDecimal(7, product.getPrice());
-            stmt.setBigDecimal(8, product.getComparePrice());
-            stmt.setBigDecimal(9, product.getCostPrice());
-            stmt.setBigDecimal(10, product.getWeight());
-            stmt.setString(11, product.getDimensions());
-            stmt.setInt(12, product.getStockQuantity());
-            stmt.setInt(13, product.getMinStockLevel());
-            stmt.setInt(14, product.getMaxStockLevel());
-            stmt.setBoolean(15, product.isActive());
-            stmt.setBoolean(16, product.isFeatured());
-            stmt.setInt(17, product.getViewCount());
-            stmt.setInt(18, product.getSalesCount());
-            stmt.setBigDecimal(19, product.getAverageRating());
-            stmt.setInt(20, product.getReviewCount());
-            stmt.setTimestamp(21, product.getCreatedDate() != null ?
-                    Timestamp.valueOf(product.getCreatedDate()) : Timestamp.valueOf(LocalDateTime.now()));
-            stmt.setTimestamp(22, product.getModifiedDate() != null ?
-                    Timestamp.valueOf(product.getModifiedDate()) : Timestamp.valueOf(LocalDateTime.now()));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    String productIdStr = rs.getString(1);
-                    if (productIdStr != null) {
-                        UUID productId = UUID.fromString(productIdStr);
-                        logger.info("Successfully added product: " + product.getProductName() + " with ID: " + productId);
-                        return productId;
-                    }
+            while (rs.next()) {
+                Product product = new Product();
+                product.setProductID(UUID.fromString(rs.getString("ProductID")));
+                product.setProductName(rs.getString("ProductName"));
+                product.setSku(rs.getString("SKU"));
+                
+                String categoryIdStr = rs.getString("CategoryID");
+                if (categoryIdStr != null) {
+                    product.setCategoryID(UUID.fromString(categoryIdStr));
+                    Category category = new Category();
+                    category.setCategoryID(UUID.fromString(categoryIdStr));
+                    category.setCategoryName(rs.getString("CategoryName"));
+                    product.setCategory(category);
                 }
+
+                String brandIdStr = rs.getString("BrandID");
+                if (brandIdStr != null) {
+                    product.setBrandID(UUID.fromString(brandIdStr));
+                    Brand brand = new Brand();
+                    brand.setBrandID(UUID.fromString(brandIdStr));
+                    brand.setBrandName(rs.getString("BrandName"));
+                    product.setBrand(brand);
+                }
+                
+                product.setDescription(rs.getString("Description"));
+                product.setShortDescription(rs.getString("ShortDescription"));
+                product.setPrice(rs.getBigDecimal("Price"));
+                product.setComparePrice(rs.getBigDecimal("ComparePrice"));
+                product.setCostPrice(rs.getBigDecimal("CostPrice"));
+                product.setWeight(rs.getBigDecimal("Weight"));
+                product.setDimensions(rs.getString("Dimensions"));
+                product.setStockQuantity(rs.getInt("StockQuantity"));
+                product.setMinStockLevel(rs.getInt("MinStockLevel"));
+                product.setMaxStockLevel(rs.getInt("MaxStockLevel"));
+                product.setActive(rs.getBoolean("IsActive"));
+                product.setFeatured(rs.getBoolean("IsFeatured"));
+                product.setViewCount(rs.getInt("ViewCount"));
+                product.setSalesCount(rs.getInt("SalesCount"));
+                product.setAverageRating(rs.getBigDecimal("AverageRating"));
+                product.setReviewCount(rs.getInt("ReviewCount"));
+                
+                product.setCreatedDate(rs.getTimestamp("CreatedDate").toLocalDateTime());
+                
+                if (rs.getTimestamp("ModifiedDate") != null) {
+                    product.setModifiedDate(rs.getTimestamp("ModifiedDate").toLocalDateTime());
+                }
+
+                // Lấy hình ảnh chính cho sản phẩm
+                try {
+                    ProductImage mainImage = productImageDAO.getMainImageByProductId(product.getProductID());
+                    if (mainImage != null) {
+                        List<ProductImage> images = new ArrayList<>();
+                        images.add(mainImage);
+                        product.setImages(images);
+                    }
+                } catch (SQLException e) {
+                    System.err.println("Error fetching main image for product (admin view) " + product.getProductID() + ": " + e.getMessage());
+                }
+
+                products.add(product);
             }
-            logger.warning("No product was added for: " + product.getProductName());
-            return null;
-        } catch (SQLException e) {
-            logger.severe("Failed to add product: " + product.getProductName() + ". Error: " + e.getMessage());
-            throw new SQLException("Error adding product: " + e.getMessage(), e);
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Error fetching all products for admin: " + e.getMessage());
+            e.printStackTrace();
         }
+        return products;
     }
 
-    public boolean updateProduct(Product product) throws SQLException {
-        String sql = "UPDATE Products SET ProductName = ?, SKU = ?, CategoryID = ?, BrandID = ?, Description = ?, " +
-                "ShortDescription = ?, Price = ?, ComparePrice = ?, CostPrice = ?, Weight = ?, Dimensions = ?, " +
-                "StockQuantity = ?, MinStockLevel = ?, MaxStockLevel = ?, IsActive = ?, IsFeatured = ?, " +
-                "ViewCount = ?, SalesCount = ?, AverageRating = ?, ReviewCount = ?, ModifiedDate = ? " +
-                "WHERE ProductID = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, product.getProductName());
-            stmt.setString(2, product.getSku());
-            stmt.setObject(3, product.getCategoryID() != null ? product.getCategoryID().toString() : null);
-            stmt.setObject(4, product.getBrandID() != null ? product.getBrandID().toString() : null);
-            stmt.setString(5, product.getDescription());
-            stmt.setString(6, product.getShortDescription());
-            stmt.setBigDecimal(7, product.getPrice());
-            stmt.setBigDecimal(8, product.getComparePrice());
-            stmt.setBigDecimal(9, product.getCostPrice());
-            stmt.setBigDecimal(10, product.getWeight());
-            stmt.setString(11, product.getDimensions());
-            stmt.setInt(12, product.getStockQuantity());
-            stmt.setInt(13, product.getMinStockLevel());
-            stmt.setInt(14, product.getMaxStockLevel());
-            stmt.setBoolean(15, product.isActive());
-            stmt.setBoolean(16, product.isFeatured());
-            stmt.setInt(17, product.getViewCount());
-            stmt.setInt(18, product.getSalesCount());
-            stmt.setBigDecimal(19, product.getAverageRating());
-            stmt.setInt(20, product.getReviewCount());
-            stmt.setTimestamp(21, Timestamp.valueOf(LocalDateTime.now()));
-            stmt.setString(22, product.getProductID().toString());
-
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected > 0) {
-                logger.info("Successfully updated product: " + product.getProductName() + " with ID: " + product.getProductID());
-                return true;
-            } else {
-                logger.warning("No product updated for ID: " + product.getProductID());
-                return false;
-            }
-        } catch (SQLException e) {
-            logger.severe("Failed to update product: " + product.getProductName() + ". Error: " + e.getMessage());
-            throw new SQLException("Error updating product: " + e.getMessage(), e);
-        }
-    }
-
-    public boolean deleteProduct(UUID productId) throws SQLException {
-        String sql = "UPDATE Products SET IsActive = 0, ModifiedDate = ? WHERE ProductID = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setTimestamp(1, Timestamp.valueOf(LocalDateTime.now()));
-            stmt.setString(2, productId.toString());
-
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected > 0) {
-                logger.info("Successfully deleted product with ID: " + productId);
-                return true;
-            } else {
-                logger.warning("No product deleted for ID: " + productId);
-                return false;
-            }
-        } catch (SQLException e) {
-            logger.severe("Failed to delete product with ID: " + productId + ". Error: " + e.getMessage());
-            throw new SQLException("Error deleting product: " + e.getMessage(), e);
-        }
-    }
-
-    public Product getProductById(UUID productId) throws SQLException {
-        String sql = "SELECT p.ProductID, p.ProductName, p.SKU, p.CategoryID, c.CategoryName, " +
-                "p.BrandID, b.BrandName, p.Description, p.ShortDescription, p.Price, " +
-                "p.ComparePrice, p.CostPrice, p.Weight, p.Dimensions, p.StockQuantity, " +
-                "p.MinStockLevel, p.MaxStockLevel, p.IsActive, p.IsFeatured, p.ViewCount, " +
-                "p.SalesCount, p.AverageRating, p.ReviewCount, p.CreatedDate, p.ModifiedDate " +
-                "FROM Products p " +
-                "LEFT JOIN Categories c ON p.CategoryID = c.CategoryID " +
-                "LEFT JOIN Brands b ON p.BrandID = b.BrandID " +
-                "WHERE p.ProductID = ?";
-
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, productId.toString());
-            try (ResultSet rs = stmt.executeQuery()) {
+    public Product getProductById(UUID productId) {
+        Product product = null;
+        String sql = "SELECT p.ProductID, p.ProductName, p.SKU, p.CategoryID, p.BrandID, p.Description, p.ShortDescription, " +
+                     "p.Price, p.ComparePrice, p.CostPrice, p.Weight, p.Dimensions, p.StockQuantity, p.MinStockLevel, p.MaxStockLevel, " +
+                     "p.IsActive, p.IsFeatured, p.ViewCount, p.SalesCount, p.AverageRating, p.ReviewCount, p.CreatedDate, p.ModifiedDate, " +
+                     "c.CategoryName, b.BrandName " +
+                     "FROM Products p " +
+                     "LEFT JOIN Categories c ON p.CategoryID = c.CategoryID " +
+                     "LEFT JOIN Brands b ON p.BrandID = b.BrandID " +
+                     "WHERE p.ProductID = ?";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, productId.toString());
+            try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    Category category = null;
-                    if (rs.getString("CategoryID") != null) {
-                        category = new Category();
-                        category.setCategoryID(UUID.fromString(rs.getString("CategoryID")));
-                        category.setCategoryName(rs.getString("CategoryName"));
-                    }
-
-                    Brand brand = null;
-                    if (rs.getString("BrandID") != null) {
-                        brand = new Brand();
-                        brand.setBrandID(UUID.fromString(rs.getString("BrandID")));
-                        brand.setBrandName(rs.getString("BrandName"));
-                    }
-
-                    Product product = new Product();
-                    product.setProductID(rs.getString("ProductID") != null ? UUID.fromString(rs.getString("ProductID")) : null);
+                    product = new Product();
+                    product.setProductID(UUID.fromString(rs.getString("ProductID")));
                     product.setProductName(rs.getString("ProductName"));
                     product.setSku(rs.getString("SKU"));
-                    product.setCategoryID(rs.getString("CategoryID") != null ? UUID.fromString(rs.getString("CategoryID")) : null);
-                    product.setBrandID(rs.getString("BrandID") != null ? UUID.fromString(rs.getString("BrandID")) : null);
-                    product.setCategory(category);
-                    product.setBrand(brand);
+                    
+                    String categoryIdStr = rs.getString("CategoryID");
+                    if (categoryIdStr != null) {
+                        product.setCategoryID(UUID.fromString(categoryIdStr));
+                        Category category = new Category();
+                        category.setCategoryID(UUID.fromString(categoryIdStr));
+                        category.setCategoryName(rs.getString("CategoryName"));
+                        product.setCategory(category);
+                    }
+
+                    String brandIdStr = rs.getString("BrandID");
+                    if (brandIdStr != null) {
+                        product.setBrandID(UUID.fromString(brandIdStr));
+                        Brand brand = new Brand();
+                        brand.setBrandID(UUID.fromString(brandIdStr));
+                        brand.setBrandName(rs.getString("BrandName"));
+                        product.setBrand(brand);
+                    }
+                    
                     product.setDescription(rs.getString("Description"));
                     product.setShortDescription(rs.getString("ShortDescription"));
                     product.setPrice(rs.getBigDecimal("Price"));
@@ -279,91 +248,321 @@ public class ProductDAO extends DBContext {
                     product.setSalesCount(rs.getInt("SalesCount"));
                     product.setAverageRating(rs.getBigDecimal("AverageRating"));
                     product.setReviewCount(rs.getInt("ReviewCount"));
-                    Timestamp createdDate = rs.getTimestamp("CreatedDate");
-                    product.setCreatedDate(createdDate != null ? createdDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null);
-                    Timestamp modifiedDate = rs.getTimestamp("ModifiedDate");
-                    product.setModifiedDate(modifiedDate != null ? modifiedDate.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime() : null);
+                    
+                    product.setCreatedDate(rs.getTimestamp("CreatedDate").toLocalDateTime());
+                    
+                    if (rs.getTimestamp("ModifiedDate") != null) {
+                        product.setModifiedDate(rs.getTimestamp("ModifiedDate").toLocalDateTime());
+                    }
 
-                    logger.info("Retrieved product with ID: " + productId);
-                    return product;
+                    // Lấy tất cả hình ảnh cho sản phẩm
+                    try {
+                        product.setImages(productImageDAO.getImagesByProductId(product.getProductID()));
+                    } catch (SQLException e) {
+                        System.err.println("Error fetching images for product " + product.getProductID() + ": " + e.getMessage());
+                    }
                 }
             }
-            logger.warning("No product found with ID: " + productId);
-            return null;
-        } catch (SQLException e) {
-            logger.severe("Failed to retrieve product with ID: " + productId + ". Error: " + e.getMessage());
-            throw new SQLException("Error retrieving product: " + e.getMessage(), e);
-        }
-    }
-
-    public static void main(String[] args) {
-        ProductDAO dao = new ProductDAO();
-        try {
-            // Step 1: Fetch a valid product to work with (first active product)
-            List<Product> products = dao.getProducts(1, 1);
-            if (products.isEmpty()) {
-                System.out.println("No active products found in the database.");
-                return;
-            }
-            UUID productId = products.get(0).getProductID();
-            System.out.println("\nStep 1: Fetching product details");
-            Product product = dao.getProductById(productId);
-            if (product != null) {
-                System.out.println("Product: " + product.getProductName() + " (SKU: " + product.getSku() + ")");
-                System.out.println("Price: " + product.getPrice());
-                System.out.println("Stock Quantity: " + product.getStockQuantity());
-                System.out.println("Category: " + (product.getCategory() != null ? product.getCategory().getCategoryName() : "None"));
-                System.out.println("Brand: " + (product.getBrand() != null ? product.getBrand().getBrandName() : "None"));
-            } else {
-                System.out.println("Failed to retrieve product with ID: " + productId);
-                return;
-            }
-
-            // Step 2: Update the product
-            System.out.println("\nStep 2: Updating product");
-            product.setProductName(product.getProductName() + " (Updated)");
-            product.setPrice(product.getPrice().add(new BigDecimal("50.00")));
-            product.setStockQuantity(product.getStockQuantity() + 10);
-            product.setModifiedDate(LocalDateTime.now());
-            if (dao.updateProduct(product)) {
-                System.out.println("Product updated successfully.");
-                Product updatedProduct = dao.getProductById(productId);
-                if (updatedProduct != null) {
-                    System.out.println("Updated Product: " + updatedProduct.getProductName() + " (SKU: " + updatedProduct.getSku() + ")");
-                    System.out.println("Updated Price: " + updatedProduct.getPrice());
-                    System.out.println("Updated Stock Quantity: " + updatedProduct.getStockQuantity());
-                }
-            } else {
-                System.out.println("Failed to update product with ID: " + productId);
-            }
-
-            // Step 3: Delete the product (soft delete)
-            System.out.println("\nStep 3: Deleting product");
-            if (dao.deleteProduct(productId)) {
-                System.out.println("Product deleted successfully.");
-                Product deletedProduct = dao.getProductById(productId);
-                if (deletedProduct == null || !deletedProduct.isActive()) {
-                    System.out.println("Confirmed: Product is no longer active.");
-                } else {
-                    System.out.println("Product still appears active.");
-                }
-            } else {
-                System.out.println("Failed to delete product with ID: " + productId);
-            }
-
-            // Step 4: List remaining active products
-            System.out.println("\nStep 4: Listing remaining active products");
-            products = dao.getProducts(1, 10);
-            if (products.isEmpty()) {
-                System.out.println("No active products found.");
-            } else {
-                for (Product p : products) {
-                    System.out.println(p.getProductName() + " (SKU: " + p.getSku() + ")");
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Error in demo: " + e.getMessage());
+        } catch (SQLException | ClassNotFoundException e) {
+            System.err.println("Error fetching product by ID: " + e.getMessage());
             e.printStackTrace();
         }
+        return product;
+    }
+
+    /**
+     * Thêm một sản phẩm mới vào cơ sở dữ liệu.
+     * @param product Đối tượng Product cần thêm.
+     * @return true nếu thêm thành công, false nếu thất bại.
+     */
+    public boolean addProduct(Product product) {
+        String sql = "INSERT INTO Products (ProductID, ProductName, SKU, CategoryID, BrandID, Description, ShortDescription, " +
+                     "Price, ComparePrice, CostPrice, Weight, Dimensions, StockQuantity, MinStockLevel, MaxStockLevel, " +
+                     "IsActive, IsFeatured, ViewCount, SalesCount, AverageRating, ReviewCount, CreatedDate, ModifiedDate) " +
+                     "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            UUID newId = UUID.randomUUID();
+            product.setProductID(newId); // Gán ID cho đối tượng trước khi thêm
+
+            ps.setString(1, newId.toString());
+            ps.setString(2, product.getProductName());
+            ps.setString(3, product.getSku());
+            ps.setString(4, product.getCategoryID() != null ? product.getCategoryID().toString() : null);
+            ps.setString(5, product.getBrandID() != null ? product.getBrandID().toString() : null);
+            ps.setString(6, product.getDescription());
+            ps.setString(7, product.getShortDescription());
+            ps.setBigDecimal(8, product.getPrice());
+            ps.setBigDecimal(9, product.getComparePrice());
+            ps.setBigDecimal(10, product.getCostPrice());
+            ps.setBigDecimal(11, product.getWeight());
+            ps.setString(12, product.getDimensions());
+            ps.setInt(13, product.getStockQuantity());
+            ps.setInt(14, product.getMinStockLevel());
+            ps.setInt(15, product.getMaxStockLevel());
+            ps.setBoolean(16, product.isActive());
+            ps.setBoolean(17, product.isFeatured());
+            ps.setInt(18, product.getViewCount());
+            ps.setInt(19, product.getSalesCount());
+            ps.setBigDecimal(20, product.getAverageRating());
+            ps.setInt(21, product.getReviewCount());
+            ps.setTimestamp(22, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+            ps.setTimestamp(23, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error adding product: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return false;
+    }
+
+    /**
+     * Cập nhật thông tin một sản phẩm hiện có.
+     * @param product Đối tượng Product cần cập nhật.
+     * @return true nếu cập nhật thành công, false nếu thất bại.
+     */
+    public boolean updateProduct(Product product) {
+        String sql = "UPDATE Products SET ProductName = ?, SKU = ?, CategoryID = ?, BrandID = ?, Description = ?, ShortDescription = ?, " +
+                     "Price = ?, ComparePrice = ?, CostPrice = ?, Weight = ?, Dimensions = ?, StockQuantity = ?, MinStockLevel = ?, MaxStockLevel = ?, " +
+                     "IsActive = ?, IsFeatured = ?, ViewCount = ?, SalesCount = ?, AverageRating = ?, ReviewCount = ?, ModifiedDate = ? " +
+                     "WHERE ProductID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, product.getProductName());
+            ps.setString(2, product.getSku());
+            ps.setString(3, product.getCategoryID() != null ? product.getCategoryID().toString() : null);
+            ps.setString(4, product.getBrandID() != null ? product.getBrandID().toString() : null);
+            ps.setString(5, product.getDescription());
+            ps.setString(6, product.getShortDescription());
+            ps.setBigDecimal(7, product.getPrice());
+            ps.setBigDecimal(8, product.getComparePrice());
+            ps.setBigDecimal(9, product.getCostPrice());
+            ps.setBigDecimal(10, product.getWeight());
+            ps.setString(11, product.getDimensions());
+            ps.setInt(12, product.getStockQuantity());
+            ps.setInt(13, product.getMinStockLevel());
+            ps.setInt(14, product.getMaxStockLevel());
+            ps.setBoolean(15, product.isActive());
+            ps.setBoolean(16, product.isFeatured());
+            ps.setInt(17, product.getViewCount());
+            ps.setInt(18, product.getSalesCount());
+            ps.setBigDecimal(19, product.getAverageRating());
+            ps.setInt(20, product.getReviewCount());
+            ps.setTimestamp(21, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+            ps.setString(22, product.getProductID().toString());
+
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error updating product: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return false;
+    }
+
+    /**
+     * Xóa mềm một sản phẩm (đặt IsActive = false).
+     * @param productId ID của sản phẩm cần xóa.
+     * @return true nếu xóa thành công, false nếu thất bại.
+     */
+    public boolean deleteProduct(UUID productId) {
+        String sql = "UPDATE Products SET IsActive = 0, ModifiedDate = ? WHERE ProductID = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setTimestamp(1, java.sql.Timestamp.valueOf(LocalDateTime.now()));
+            ps.setString(2, productId.toString());
+            int rowsAffected = ps.executeUpdate();
+            return rowsAffected > 0;
+        } catch (SQLException e) {
+            System.err.println("Error deleting product: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return false;
+    }
+
+    /**
+     * Tìm kiếm và lọc sản phẩm dựa trên từ khóa, danh mục và thương hiệu.
+     * @param searchTerm Từ khóa tìm kiếm (tên sản phẩm, mô tả, SKU).
+     * @param categoryId ID của danh mục để lọc.
+     * @param brandId ID của thương hiệu để lọc.
+     * @param pageNumber Số trang (bắt đầu từ 1).
+     * @param pageSize Kích thước trang.
+     * @param sortBy Trường để sắp xếp (ProductName, Price, CreatedDate, v.v.).
+     * @param sortOrder Thứ tự sắp xếp (asc, desc).
+     * @return Danh sách các đối tượng Product phù hợp.
+     */
+    public List<Product> searchAndFilterProducts(String searchTerm, UUID categoryId, UUID brandId, int pageNumber, int pageSize, String sortBy, String sortOrder) {
+        List<Product> products = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT p.ProductID, p.ProductName, p.SKU, p.CategoryID, p.BrandID, p.Description, p.ShortDescription, " +
+                "p.Price, p.ComparePrice, p.CostPrice, p.Weight, p.Dimensions, p.StockQuantity, p.MinStockLevel, p.MaxStockLevel, " +
+                "p.IsActive, p.IsFeatured, p.ViewCount, p.SalesCount, p.AverageRating, p.ReviewCount, p.CreatedDate, p.ModifiedDate, " +
+                "c.CategoryName, b.BrandName " +
+                "FROM Products p " +
+                "LEFT JOIN Categories c ON p.CategoryID = c.CategoryID " +
+                "LEFT JOIN Brands b ON p.BrandID = b.BrandID " +
+                "WHERE p.IsActive = 1");
+
+        List<Object> params = new ArrayList<>();
+
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sql.append(" AND (p.ProductName LIKE ? OR p.Description LIKE ? OR p.SKU LIKE ?)");
+            String likeTerm = "%" + searchTerm.trim() + "%";
+            params.add(likeTerm);
+            params.add(likeTerm);
+            params.add(likeTerm);
+        }
+
+        if (categoryId != null) {
+            sql.append(" AND p.CategoryID = ?");
+            params.add(categoryId.toString());
+        }
+
+        if (brandId != null) {
+            sql.append(" AND p.BrandID = ?");
+            params.add(brandId.toString());
+        }
+
+        sql.append(" ORDER BY ").append(sortBy).append(" ").append(sortOrder);
+        sql.append(" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            for (Object param : params) {
+                ps.setObject(paramIndex++, param);
+            }
+            ps.setInt(paramIndex++, (pageNumber - 1) * pageSize);
+            ps.setInt(paramIndex++, pageSize);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    Product product = new Product();
+                    product.setProductID(UUID.fromString(rs.getString("ProductID")));
+                    product.setProductName(rs.getString("ProductName"));
+                    product.setSku(rs.getString("SKU"));
+
+                    String categoryIdStr = rs.getString("CategoryID");
+                    if (categoryIdStr != null) {
+                        product.setCategoryID(UUID.fromString(categoryIdStr));
+                        Category category = new Category();
+                        category.setCategoryID(UUID.fromString(categoryIdStr));
+                        category.setCategoryName(rs.getString("CategoryName"));
+                        product.setCategory(category);
+                    }
+
+                    String brandIdStr = rs.getString("BrandID");
+                    if (brandIdStr != null) {
+                        product.setBrandID(UUID.fromString(brandIdStr));
+                        Brand brand = new Brand();
+                        brand.setBrandID(UUID.fromString(brandIdStr));
+                        brand.setBrandName(rs.getString("BrandName"));
+                        product.setBrand(brand);
+                    }
+
+                    product.setDescription(rs.getString("Description"));
+                    product.setShortDescription(rs.getString("ShortDescription"));
+                    product.setPrice(rs.getBigDecimal("Price"));
+                    product.setComparePrice(rs.getBigDecimal("ComparePrice"));
+                    product.setCostPrice(rs.getBigDecimal("CostPrice"));
+                    product.setWeight(rs.getBigDecimal("Weight"));
+                    product.setDimensions(rs.getString("Dimensions"));
+                    product.setStockQuantity(rs.getInt("StockQuantity"));
+                    product.setMinStockLevel(rs.getInt("MinStockLevel"));
+                    product.setMaxStockLevel(rs.getInt("MaxStockLevel"));
+                    product.setActive(rs.getBoolean("IsActive"));
+                    product.setFeatured(rs.getBoolean("IsFeatured"));
+                    product.setViewCount(rs.getInt("ViewCount"));
+                    product.setSalesCount(rs.getInt("SalesCount"));
+                    product.setAverageRating(rs.getBigDecimal("AverageRating"));
+                    product.setReviewCount(rs.getInt("ReviewCount"));
+
+                    product.setCreatedDate(rs.getTimestamp("CreatedDate").toLocalDateTime());
+
+                    if (rs.getTimestamp("ModifiedDate") != null) {
+                        product.setModifiedDate(rs.getTimestamp("ModifiedDate").toLocalDateTime());
+                    }
+
+                    // Lấy hình ảnh chính cho sản phẩm
+                    try {
+                        ProductImage mainImage = productImageDAO.getMainImageByProductId(product.getProductID());
+                        if (mainImage != null) {
+                            List<ProductImage> images = new ArrayList<>();
+                            images.add(mainImage);
+                            product.setImages(images);
+                        }
+                    } catch (SQLException e) {
+                        System.err.println("Error fetching main image for product " + product.getProductID() + ": " + e.getMessage());
+                    }
+
+                    products.add(product);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error searching and filtering products: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return products;
+    }
+
+    /**
+     * Lấy tổng số sản phẩm phù hợp với các tiêu chí tìm kiếm/lọc.
+     * @param searchTerm Từ khóa tìm kiếm (tên sản phẩm, mô tả, SKU).
+     * @param categoryId ID của danh mục để lọc.
+     * @param brandId ID của thương hiệu để lọc.
+     * @return Tổng số sản phẩm phù hợp.
+     */
+    public int getTotalProductCount(String searchTerm, UUID categoryId, UUID brandId) {
+        StringBuilder sql = new StringBuilder("SELECT COUNT(*) FROM Products p WHERE p.IsActive = 1");
+        List<Object> params = new ArrayList<>();
+
+        if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+            sql.append(" AND (p.ProductName LIKE ? OR p.Description LIKE ? OR p.SKU LIKE ?)");
+            String likeTerm = "%" + searchTerm.trim() + "%";
+            params.add(likeTerm);
+            params.add(likeTerm);
+            params.add(likeTerm);
+        }
+
+        if (categoryId != null) {
+            sql.append(" AND p.CategoryID = ?");
+            params.add(categoryId.toString());
+        }
+
+        if (brandId != null) {
+            sql.append(" AND p.BrandID = ?");
+            params.add(brandId.toString());
+        }
+
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+
+            int paramIndex = 1;
+            for (Object param : params) {
+                ps.setObject(paramIndex++, param);
+            }
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Error getting total product count: " + e.getMessage());
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            throw new RuntimeException(e);
+        }
+        return 0;
     }
 }

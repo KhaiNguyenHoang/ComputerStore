@@ -17,7 +17,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.UUID;
 
-@WebServlet(urlPatterns = {"/admin/categories", "/admin/categories/add", "/admin/categories/edit", "/admin/categories/delete"})
+
 public class CategoryServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CategoryServlet.class);

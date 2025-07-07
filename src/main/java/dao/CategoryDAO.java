@@ -147,6 +147,51 @@ public class CategoryDAO extends DBContext {
     }
 
     /**
+     * Lấy danh sách danh mục có phân trang và sắp xếp.
+     * @param pageNumber Số trang (bắt đầu từ 1).
+     * @param pageSize Kích thước trang.
+     * @param sortBy Trường để sắp xếp (CategoryName, CreatedDate, v.v.).
+     * @param sortOrder Thứ tự sắp xếp (asc, desc).
+     * @return Danh sách các đối tượng Category.
+     */
+    public List<Category> getCategoriesPaged(int pageNumber, int pageSize, String sortBy, String sortOrder) {
+        List<Category> categories = new ArrayList<>();
+        String sql = "SELECT CategoryID, CategoryName, Description, ParentCategoryID, IsActive, CreatedDate, ModifiedDate " +
+                "FROM Categories ORDER BY " + sortBy + " " + sortOrder + " OFFSET ? ROWS FETCH NEXT ? ROWS ONLY";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, (pageNumber - 1) * pageSize);
+            stmt.setInt(2, pageSize);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    categories.add(mapResultSetToCategory(rs));
+                }
+            }
+            LOGGER.info("Retrieved {} categories for page {} size {}.", categories.size(), pageNumber, pageSize);
+        } catch (SQLException e) {
+            LOGGER.error("Failed to retrieve categories paged: {}", e.getMessage(), e);
+        }
+        return categories;
+    }
+
+    /**
+     * Lấy tổng số danh mục.
+     * @return Tổng số danh mục.
+     */
+    public int getTotalCategoryCount() {
+        String sql = "SELECT COUNT(*) FROM Categories";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                return rs.getInt(1);
+            }
+        } catch (SQLException e) {
+            LOGGER.error("Failed to get total category count: {}", e.getMessage(), e);
+        }
+        return 0;
+    }
+
+    /**
      * Phương thức helper để ánh xạ một hàng từ ResultSet sang đối tượng Category.
      */
     private Category mapResultSetToCategory(ResultSet rs) throws SQLException {

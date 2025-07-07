@@ -50,7 +50,7 @@ public class AuthServlet extends HttpServlet {
         String referer = request.getHeader("Referer");
         if (referer == null || !referer.startsWith("http://localhost:8080/PCGearStore")) {
             logger.warning("Invalid Referer for path: " + path + ", referer: " + referer);
-            request.setAttribute("error", "Invalid request source. Please try again.");
+            request.setAttribute("errorMessage", "Invalid request source. Please try again.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
             return;
         }
@@ -75,19 +75,14 @@ public class AuthServlet extends HttpServlet {
             }
         } catch (Exception e) {
             logger.severe("Unexpected error in POST request for " + path + ": " + e.getMessage());
-            request.setAttribute("error", "An unexpected error occurred. Please try again later.");
+            request.setAttribute("errorMessage", "An unexpected error occurred. Please try again later.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
 
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        HttpSession session = request.getSession(false);
-        if (session != null && session.getAttribute("user") != null && !"/verify".equals(request.getServletPath())) {
-            logger.info("User already logged in, redirecting to home.jsp");
-            response.sendRedirect("home.jsp");
-            return;
-        }
+        
 
         String path = request.getServletPath();
         try {
@@ -108,7 +103,7 @@ public class AuthServlet extends HttpServlet {
                     String token = request.getParameter("token");
                     if (token == null || token.trim().isEmpty()) {
                         logger.warning("Missing reset token in GET request");
-                        request.setAttribute("error", "Reset token is missing.");
+                        request.setAttribute("errorMessage", "Reset token is missing.");
                         request.getRequestDispatcher("error.jsp").forward(request, response);
                     } else {
                         request.setAttribute("token", token.trim());
@@ -116,12 +111,12 @@ public class AuthServlet extends HttpServlet {
                     }
                     break;
                 default:
-                    logger.info("Redirecting unknown GET path " + path + " to index.jsp");
-                    response.sendRedirect("index.jsp");
+                    logger.info("Forwarding unknown GET path " + path + " to index.jsp");
+                    request.getRequestDispatcher("index.jsp").forward(request, response);
             }
         } catch (Exception e) {
             logger.severe("Unexpected error in GET request for " + path + ": " + e.getMessage());
-            request.setAttribute("error", "An unexpected error occurred. Please try again later.");
+            request.setAttribute("errorMessage", "An unexpected error occurred. Please try again later.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
@@ -153,13 +148,13 @@ public class AuthServlet extends HttpServlet {
             errorMsg.append("Last name is required. ");
         }
         if (!errorMsg.isEmpty()) {
-            request.setAttribute("error", errorMsg.toString());
+            request.setAttribute("errorMessage", errorMsg.toString());
             request.getRequestDispatcher("register.jsp").forward(request, response);
             return;
         }
 
         if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-            request.setAttribute("error", "Invalid email format.");
+            request.setAttribute("errorMessage", "Invalid email format.");
             request.getRequestDispatcher("register.jsp").forward(request, response);
             return;
         }
@@ -169,7 +164,7 @@ public class AuthServlet extends HttpServlet {
             try {
                 dob = LocalDate.parse(dateOfBirth);
             } catch (DateTimeParseException e) {
-                request.setAttribute("error", "Invalid date of birth format (use YYYY-MM-DD).");
+                request.setAttribute("errorMessage", "Invalid date of birth format (use YYYY-MM-DD).");
                 request.getRequestDispatcher("register.jsp").forward(request, response);
                 return;
             }
@@ -188,7 +183,7 @@ public class AuthServlet extends HttpServlet {
             request.getRequestDispatcher("register-success.jsp").forward(request, response);
         } else {
             logger.warning("Registration failed for user: " + username);
-            request.setAttribute("error", "Registration failed. Username, email, or phone number may already exist, or invalid input.");
+            request.setAttribute("errorMessage", "Registration failed. Username, email, or phone number may already exist, or invalid input.");
             request.getRequestDispatcher("register.jsp").forward(request, response);
         }
     }
@@ -198,7 +193,7 @@ public class AuthServlet extends HttpServlet {
         String password = request.getParameter("password");
 
         if (username == null || username.trim().isEmpty() || password == null || password.trim().isEmpty()) {
-            request.setAttribute("error", "Username and password are required.");
+            request.setAttribute("errorMessage", "Username and password are required.");
             request.getRequestDispatcher("login.jsp").forward(request, response);
             return;
         }
@@ -216,7 +211,7 @@ public class AuthServlet extends HttpServlet {
                 HttpSession session = request.getSession(true);
                 session.setAttribute("tempLogin", loginRequest);
             }
-            request.setAttribute("error", e.getMessage());
+            request.setAttribute("errorMessage", e.getMessage());
             request.getRequestDispatcher("login.jsp").forward(request, response);
         }
     }
@@ -225,7 +220,7 @@ public class AuthServlet extends HttpServlet {
         String token = request.getParameter("token");
         if (token == null || token.trim().isEmpty()) {
             logger.warning("Missing verification token");
-            request.setAttribute("error", "Verification token is missing.");
+            request.setAttribute("errorMessage", "Verification token is missing.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
             return;
         }
@@ -247,11 +242,11 @@ public class AuthServlet extends HttpServlet {
                     logger.warning("Auto-login failed after verification: " + e.getMessage());
                 }
             }
-            request.setAttribute("message", "Email verified successfully! You can now log in.");
+            request.setAttribute("successMessage", "Email verified successfully! You can now log in.");
             request.getRequestDispatcher("login.jsp").forward(request, response);
         } else {
             logger.warning("Invalid or expired verification token: " + token);
-            request.setAttribute("error", "Invalid or expired verification link. Please request a new verification email.");
+            request.setAttribute("errorMessage", "Invalid or expired verification link. Please request a new verification email.");
             request.getRequestDispatcher("error.jsp").forward(request, response);
         }
     }
@@ -259,13 +254,13 @@ public class AuthServlet extends HttpServlet {
     private void handleForgotPassword(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String email = request.getParameter("email");
         if (email == null || email.trim().isEmpty()) {
-            request.setAttribute("error", "Email is required.");
+            request.setAttribute("errorMessage", "Email is required.");
             request.getRequestDispatcher("forgot-password.jsp").forward(request, response);
             return;
         }
 
         if (!email.matches("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")) {
-            request.setAttribute("error", "Invalid email format.");
+            request.setAttribute("errorMessage", "Invalid email format.");
             request.getRequestDispatcher("forgot-password.jsp").forward(request, response);
             return;
         }
@@ -279,7 +274,7 @@ public class AuthServlet extends HttpServlet {
             }
             if (attempt.count.incrementAndGet() > MAX_RESET_ATTEMPTS) {
                 logger.warning("Too many password reset attempts for email: " + email);
-                request.setAttribute("error", "Too many reset attempts. Please try again later.");
+                request.setAttribute("errorMessage", "Too many reset attempts. Please try again later.");
                 request.getRequestDispatcher("forgot-password.jsp").forward(request, response);
                 return;
             }
@@ -288,11 +283,11 @@ public class AuthServlet extends HttpServlet {
         boolean success = authDAO.forgotPassword(email.trim());
         if (success) {
             logger.info("Password reset email sent to: " + email);
-            request.setAttribute("message", "A password reset link has been sent to your email. Please check your inbox or spam folder.");
+            request.setAttribute("successMessage", "A password reset link has been sent to your email. Please check your inbox or spam folder.");
             request.getRequestDispatcher("forgot-password.jsp").forward(request, response);
         } else {
             logger.warning("Forgot password failed for email: " + email);
-            request.setAttribute("error", "Email not found or account is inactive.");
+            request.setAttribute("errorMessage", "Email not found or account is inactive.");
             request.getRequestDispatcher("forgot-password.jsp").forward(request, response);
         }
     }
@@ -305,14 +300,14 @@ public class AuthServlet extends HttpServlet {
         if (token == null || token.trim().isEmpty() ||
                 newPassword == null || newPassword.trim().isEmpty() ||
                 confirmPassword == null || confirmPassword.trim().isEmpty()) {
-            request.setAttribute("error", "All fields are required.");
+            request.setAttribute("errorMessage", "All fields are required.");
             request.setAttribute("token", token);
             request.getRequestDispatcher("reset-password.jsp").forward(request, response);
             return;
         }
 
         if (!newPassword.trim().equals(confirmPassword.trim())) {
-            request.setAttribute("error", "Passwords do not match.");
+            request.setAttribute("errorMessage", "Passwords do not match.");
             request.setAttribute("token", token);
             request.getRequestDispatcher("reset-password.jsp").forward(request, response);
             return;
@@ -321,11 +316,11 @@ public class AuthServlet extends HttpServlet {
         boolean success = authDAO.resetPassword(token.trim(), newPassword.trim());
         if (success) {
             logger.info("Password reset successfully for token: " + token);
-            request.setAttribute("message", "Your password has been reset successfully. You can now log in.");
+            request.setAttribute("successMessage", "Your password has been reset successfully. You can now log in.");
             request.getRequestDispatcher("login.jsp").forward(request, response);
         } else {
             logger.warning("Invalid or expired reset token: " + token);
-            request.setAttribute("error", "Invalid or expired reset link. Please request a new password reset.");
+            request.setAttribute("errorMessage", "Invalid or expired reset link. Please request a new password reset.");
             request.setAttribute("token", token);
             request.getRequestDispatcher("reset-password.jsp").forward(request, response);
         }

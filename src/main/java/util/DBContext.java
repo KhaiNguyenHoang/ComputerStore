@@ -38,7 +38,30 @@ public class DBContext {
         }
     }
 
-    public Connection getConnection() {
-        return connection;
+    public Connection getConnection() throws SQLException, ClassNotFoundException {
+        String url = properties.getProperty("DB_URL");
+        String user = properties.getProperty("DB_USERNAME");
+        String password = properties.getProperty("DB_PASSWORD");
+        String driver = properties.getProperty("DB_DRIVER");
+
+        Class.forName(driver);
+        return DriverManager.getConnection(url, user, password);
+    }
+
+    static {
+        try {
+            // Load the driver once when the class is loaded
+            Properties staticProps = new Properties();
+            try (InputStream input = DBContext.class.getClassLoader().getResourceAsStream("database.properties")) {
+                if (input == null) {
+                    throw new IOException("Unable to find database.properties for static initialization");
+                }
+                staticProps.load(input);
+            }
+            Class.forName(staticProps.getProperty("DB_DRIVER"));
+        } catch (IOException | ClassNotFoundException e) {
+            Logger.getLogger(DBContext.class.getName()).log(Level.SEVERE, "Failed to load database driver", e);
+            throw new ExceptionInInitializerError(e);
+        }
     }
 }
